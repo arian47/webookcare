@@ -19,6 +19,7 @@ DEFAULT_MODEL_PATH = './saved_model/MLP_int_1g_bigram_multihot_labels'
 
 def load_model(saved_model_path):
     model = tensorflow.saved_model.load(saved_model_path)
+    # model = tensorflow.keras.models.load_model(saved_model_path)
     return model
 
 def parse_arguments():
@@ -45,32 +46,40 @@ def main():
     
     args = parse_arguments()
     assert args.pred, 'no item passed for prediction'
+    data = tensorflow.constant(args.pred)
     # either pad with following option or manually below
-    o = helper_layers.VectorizePrediction(args.pred, tvec_om='int', vocab=vocab,
+    o = helper_layers.VectorizePrediction(data, tvec_om='int', vocab=vocab,
                                           pad_to_max_tokens=True, output_sequence_length=710)
-    if args.pred.shape[0] == 1:
+    if data.shape[0] == 1:
         # single tensor
-        data = tensorflow.expand_dims(tensorflow.constant(args.pred),
+        data = tensorflow.expand_dims(data,
                                       0)
-        data = pp.remove_nones(
-          data
-        )
-        data = preo.clean_non_utf8(data)
-    elif args.pred.shape[0] > 1:
-        data = pp.remove_nones(
-          data
-        )
-        data = preo.clean_non_utf8(data)
+        # data = pp.remove_nones(
+        #   data
+        # )
+        # data = preo.clean_non_utf8(data)
+    # elif data.shape[0] > 1:
+        # data = pp.remove_nones(
+        #   data
+        # )
+        # data = preo.clean_non_utf8(data)
     data = o.tvec(data)
         
     if args.load:
         model = load_model(args.load)
+        infer = model.signatures['serving_default']
+        # model = tensorflow.saved_model.load(DEFAULT_MODEL_PATH)
         print(f'Model loaded from {args.load}')
     # else:
         # print('Please specify --train or --load')
-        
-    raw_predictions = model.predict(data)
-    predictions = tensorflow.where(raw_predictions >= 0.5, 1, 0)
+    
+    # print("Prediction function output keys:", infer(tensorflow.convert_to_tensor(data)).keys())
+    # raw_predictions = model.predict(data)
+    # raw_predictions = infer(data)
+    raw_predictions = infer(tensorflow.convert_to_tensor(data))
+    output_key = list(raw_predictions.keys())[0]
+    # predictions = tensorflow.where(raw_predictions >= 0.5, 1, 0)
+    predictions = tensorflow.where(raw_predictions[output_key] >= 0.5, 1, 0)
     predicted_labels = []
     for pred in predictions:
         indices = tensorflow.where(pred == 1).numpy().flatten()
