@@ -22,3 +22,9 @@ The prediction consists of weighted result of
   - models like BERT, GPT-3, T5, or Pegasus for paraphrasing Hugging Face Transformers
   - Libraries like nlpaug or textattack for text augmentation techniques
   - platforms like Amazon Mechanical Turk to have multiple people paraphrase the sentences
+
+
+overfitting is clearly visible even with the basic MLP structure
+
+![int 1 gram MLP train data, bigram multihot labels](https://github.com/user-attachments/assets/63bf8ca2-8c37-4249-91b8-e2881d66622c)
+
