@@ -24,7 +24,9 @@ The prediction consists of weighted result of
   - platforms like Amazon Mechanical Turk to have multiple people paraphrase the sentences
 
 
-overfitting is clearly visible even with the basic MLP structure
+overfitting is clearly visible even with the basic MLP structure (consisting of dense(8192), dropout(.3), dense(4096), dropout(.5), dense(len(multi label vocabulary))
 
 ![int 1 gram MLP train data, bigram multihot labels](https://github.com/user-attachments/assets/63bf8ca2-8c37-4249-91b8-e2881d66622c)
+
+![MLP int 2 gram train data, bigram multihot labels](https://github.com/user-attachments/assets/f2f72994-20c1-495a-b477-6d49557c68af)
 
