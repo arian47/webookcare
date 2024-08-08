@@ -7,6 +7,7 @@ import tensorflow
 import pathlib
 import logging
 import argparse
+import download_res
 
 numpy.set_printoptions(threshold=numpy.inf)
 # Set TensorFlow logging level to ERROR
@@ -14,8 +15,14 @@ tensorflow.get_logger().setLevel('ERROR')
 # Suppress warnings from the Python logging module
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
 
-DEFAULT_MODEL_PATH = './saved_model/MLP_int_1g_bigram_multihot_labels'
+# DEFAULT_MODEL_PATH = './saved_model/MLP_int_1g_bigram_multihot_labels'
+DEFAULT_MODEL_PATH = pathlib.Path('MLP_int_1g_bigram_multihot_labels')
+vocab_path_res = pathlib.Path('train_data_int_1g_vocab.npy')
+labels_vocab_path_res = pathlib.Path('mh_labels_vocab.npy')
 
+# NUM_UNIQUE_ITEMS = train_data_od_t.shape[-1]
+NUM_UNIQUE_ITEMS = 710
+NUM_LABELS_VOCAB_ITEMS = 2531
 
 def load_model(saved_model_path):
     model = tensorflow.saved_model.load(saved_model_path)
@@ -36,13 +43,15 @@ def parse_arguments():
 def main():
     pp = process_data.PostProcess()
     preo = process_data.Preprocess()
-    # NUM_UNIQUE_ITEMS = train_data_od_t.shape[-1]
-    NUM_UNIQUE_ITEMS = 710
-    NUM_LABELS_VOCAB_ITEMS = 2531
-    vocab_path = 'train_data_int_1g_vocab.npy'
-    vocab = numpy.load(vocab_path)
-    labels_vocab_path = 'mh_labels_vocab.npy'
-    labels_vocab = numpy.load(labels_vocab_path)
+    service = download_res.authenticate()
+    if not vocab_path_res.exists():
+        download_res.download_file(service, download_res.vocab_res_id, vocab_path_res)
+    if not labels_vocab_path_res.exists():
+        download_res.download_file(service, download_res.labels_vocab_res_id, labels_vocab_path_res)
+    if not DEFAULT_MODEL_PATH.exists():
+        download_res.download_folder(service, download_res.saved_model_res_id, DEFAULT_MODEL_PATH)
+    vocab = numpy.load(vocab_path_res)
+    labels_vocab = numpy.load(labels_vocab_path_res)
     
     args = parse_arguments()
     assert args.pred, 'no item passed for prediction'
