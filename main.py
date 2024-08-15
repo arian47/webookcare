@@ -7,6 +7,7 @@ import tensorflow
 import pathlib
 import logging
 import argparse
+import train
 import download_res
 
 numpy.set_printoptions(threshold=numpy.inf)
@@ -99,10 +100,14 @@ def main():
         # )
         # data = preo.clean_non_utf8(data)
     data = o.tvec(data)
-    if args.saved_model:
+    # if args.saved_model:
+    try:
         model = load_model(args.saved_model)
-        infer = model.signatures['serving_default']
         print(f'Model loaded from {args.saved_model}')
+    except AttributeError:
+        model = train.train_model()
+        print(f'Model trained from scratch')
+    infer = model.signatures['serving_default']
     
     # infer(data).keys()
     raw_predictions = infer(data)
