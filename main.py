@@ -17,9 +17,9 @@ tensorflow.get_logger().setLevel('ERROR')
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
 
 
-DEFAULT_MODEL_PATH = pathlib.Path('MLP_int_1g_bigram_multihot_labels')
-vocab_path_res = pathlib.Path('train_data_int_1g_vocab.npy')
-labels_vocab_path_res = pathlib.Path('mh_labels_vocab.npy')
+DEFAULT_MODEL_PATH = pathlib.Path('MLP_int_1g_bigram_multihot_labels').absolute().as_posix()
+vocab_path_res = pathlib.Path("train_data_int_1g_vocab.npy").absolute().as_posix()
+labels_vocab_path_res = pathlib.Path('mh_labels_vocab.npy').absolute().as_posix()
 
 # num of columns needed for the vectorized input string
 NUM_UNIQUE_ITEMS = 710
@@ -65,21 +65,21 @@ def parse_arguments():
 def main():
     pp = process_data.PostProcess()
     preo = process_data.Preprocess()
-    if not all([
-        vocab_path_res.exists(),
-        labels_vocab_path_res.exists(),
-        DEFAULT_MODEL_PATH.exists(),
-    ]):
-        service = download_res.authenticate()
-        if not vocab_path_res.exists():
-            download_res.download_file(service, download_res.vocab_res_id, 
-                                       vocab_path_res)
-        if not labels_vocab_path_res.exists():
-            download_res.download_file(service, download_res.labels_vocab_res_id, 
-                                       labels_vocab_path_res)
-        if not DEFAULT_MODEL_PATH.exists():
-            download_res.download_folder(service, download_res.saved_model_res_id, 
-                                         DEFAULT_MODEL_PATH)
+    # if not all([
+        # vocab_path_res.exists(),
+        # labels_vocab_path_res.exists(),
+        # DEFAULT_MODEL_PATH.exists(),
+    # ]):
+        # service = download_res.authenticate()
+        # if not vocab_path_res.exists():
+            # download_res.download_file(service, download_res.vocab_res_id, 
+                                    #    vocab_path_res)
+        # if not labels_vocab_path_res.exists():
+            # download_res.download_file(service, download_res.labels_vocab_res_id, 
+                                    #    labels_vocab_path_res)
+        # if not DEFAULT_MODEL_PATH.exists():
+            # download_res.download_folder(service, download_res.saved_model_res_id, 
+                                        #  DEFAULT_MODEL_PATH)
     vocab = numpy.load(vocab_path_res)
     labels_vocab = numpy.load(labels_vocab_path_res)
     
@@ -104,7 +104,7 @@ def main():
     try:
         model = load_model(args.saved_model)
         print(f'Model loaded from {args.saved_model}')
-    except AttributeError:
+    except:
         model = train.train_model()
         print(f'Model trained from scratch')
     infer = model.signatures['serving_default']
@@ -135,6 +135,15 @@ def main():
             iterations += 1
             if threshold < min_threshold + tolerance:
                 break
+    
+    # predictions = tensorflow.where(raw_predictions[output_key] >= threshold, 1, 0)
+    # predicted_labels = []
+    # for pred in predictions:
+        # indices = tensorflow.where(pred == 1).numpy().flatten()
+        # predicted_ngrams = [labels_vocab[i] for i in indices]
+        # predicted_labels.extend(predicted_ngrams)
+    # predicted_labels = [i for i in predicted_labels if i != '<PAD>']
+    
     print(predicted_labels)
 
 if __name__ == '__main__':

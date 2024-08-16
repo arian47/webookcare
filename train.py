@@ -5,17 +5,16 @@ import tensorflow
 import helper_layers
 import models
 import pathlib
-from transformers import T5ForConditionalGeneration, T5Tokenizer
 import nlpaug.augmenter.word as naw
 
 
 preo = process_data.Preprocess()
 pp = process_data.PostProcess()
 
-paraphrased_sentences_path = pathlib.Path("paraphrased_sentences.npy")
-augmented_labels_path = pathlib.Path("augmented_labels.npy")
+paraphrased_sentences_path = pathlib.Path("paraphrased_sentences.npy").absolute().as_posix()
+augmented_labels_path = pathlib.Path("augmented_labels.npy").absolute().as_posix()
 
-model_save_path = 'MLP_int_1g_bigram_multihot_labels'
+model_save_path = pathlib.Path('MLP_int_1g_bigram_multihot_labels').absolute().as_posix()
 
 def train_model():
     try:
@@ -24,9 +23,9 @@ def train_model():
         augmented_labels = numpy.load(
             augmented_labels_path).flatten().tolist()
     except OSError:
-        train_data_od_path = "data.csv"
-        train_labels_od_path = "labels.csv"
-        excl_file_path = 'care_seeker_data.xlsx'
+        train_data_od_path = pathlib.Path("data.csv").absolute().as_posix()
+        train_labels_od_path = pathlib.Path("labels.csv").absolute().as_posix()
+        excl_file_path = pathlib.Path('care_seeker_data.xlsx').absolute().as_posix()
 
         train_data_od = pandas.read_csv(
             train_data_od_path).to_numpy(na_value=None).flatten().tolist()
