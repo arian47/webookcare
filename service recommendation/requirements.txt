@@ -1,0 +1,10 @@
+comtypes==1.4.4
+docx2pdf==0.1.8
+google_api_python_client==2.140.0
+google_auth_oauthlib==0.4.6
+numpy==2.0.1
+pandas==2.2.2
+protobuf==3.20.3
+psutil==5.9.6
+pywin32==306
+tensorflow==2.10.1
