@@ -4,11 +4,19 @@ import json
 import logging
 import argparse
 import pathlib
-import process_data
 import tensorflow
-from .. import helper_layers
-from .. import postprocess
-from .. import preprocess
+import sys
+import os
+import webookcare.helper_layers
+import webookcare.postprocess
+import webookcare.preprocess
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# current_dir = os.path.dirname(os.path.abspath(__file__))
+# parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+# sys.path.insert(0, parent_dir)
+# print(sys.path)
+
+
 
 class CustomFormatter(argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
     pass
@@ -25,13 +33,13 @@ class Query:
         self.labels_vocab_path_res = pathlib.Path("mh_labels_vocab.npy").absolute().as_posix()
     
     def prepare_data(self, data):
-        pp = postprocess.PostProcess()
-        preo = preprocess.Preprocess()
+        pp = webookcare.postprocess.PostProcess()
+        preo = webookcare.preprocess.Preprocess()
         self.vocab = numpy.load(self.vocab_path_res)
         self.labels_vocab = numpy.load(self.labels_vocab_path_res)
-        o = helper_layers.VectorizePrediction(data, tvec_om='int', vocab=self.vocab,
-                                              pad_to_max_tokens=True, 
-                                              output_sequence_length=self.NUM_UNIQUE_ITEMS)
+        o = webookcare.helper_layers.VectorizePrediction(data, tvec_om='int', vocab=self.vocab,
+                                                         pad_to_max_tokens=True, 
+                                                         output_sequence_length=self.NUM_UNIQUE_ITEMS)
         data = o.tvec(data)
         return data
     

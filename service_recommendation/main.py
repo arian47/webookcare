@@ -1,15 +1,18 @@
 import pandas
 import numpy
-import models
+import webookcare.models
 import tensorflow
 import pathlib
 import logging
 import argparse
 import train
+import webookcare.postprocess
+import webookcare.preprocess
+import webookcare.helper_layers
+
+# local imports and try except blocks for error handling 
+# when package is not installed
 import download_res
-from .. import postprocess
-from .. import preprocess
-from .. import helper_layers
 
 numpy.set_printoptions(threshold=numpy.inf)
 # Set TensorFlow logging level to ERROR
@@ -64,8 +67,8 @@ def parse_arguments():
 
 
 def main():
-    pp = postprocess.PostProcess()
-    preo = preprocess.Preprocess()
+    pp = webookcare.postprocess.PostProcess()
+    preo = webookcare.preprocess.Preprocess()
     # if not all([
         # vocab_path_res.exists(),
         # labels_vocab_path_res.exists(),
@@ -88,9 +91,9 @@ def main():
     assert args.predict, 'no string passed for prediction'
     data = tensorflow.constant(args.predict)
     # either pad with following option or manually below
-    o = helper_layers.VectorizePrediction(data, tvec_om='int', vocab=vocab,
-                                          pad_to_max_tokens=True, 
-                                          output_sequence_length=NUM_UNIQUE_ITEMS)
+    o = webookcare.helper_layers.VectorizePrediction(data, tvec_om='int', vocab=vocab,
+                                                     pad_to_max_tokens=True, 
+                                                     output_sequence_length=NUM_UNIQUE_ITEMS)
         # data = pp.remove_nones(
         #   data
         # )

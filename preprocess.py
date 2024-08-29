@@ -2,6 +2,7 @@ import re
 import pathlib
 import shutil
 import numpy
+import collections.abc
 
 class Preprocess:
     def __init__(self):
@@ -23,7 +24,12 @@ class Preprocess:
         
     def remove_special_chars(self, data):
         pattern = r'[`~!@#$%^&*()\-_=+,.\/?;:\\|\[\]{}]'
-        cleaned_data = [re.sub(pattern, ' ', i) for i in data if i not in (None, numpy.nan,)]
+        if isinstance(data, collections.abc.Iterable):
+            cleaned_data = [re.sub(pattern, ' ', j) for i in data for j in i if i not in (None, numpy.nan,)]
+        elif isinstance(data, str):
+            cleaned_data = [re.sub(pattern, ' ', i) for i in data if i not in (None, numpy.nan,)]
+        else:
+            raise Exception('Unrecognized type!')
         return cleaned_data
     
     def custom_pattern(self, pattern, replacement, text):

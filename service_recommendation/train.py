@@ -1,15 +1,14 @@
 import pandas
-import process_data
 import numpy
 import tensorflow
-import helper_layers
-import models
+import webookcare.helper_layers
+import webookcare.models
 import pathlib
 import nlpaug.augmenter.word as naw
+import webookcare
 
-
-preo = process_data.Preprocess()
-pp = process_data.PostProcess()
+preo = webookcare.preprocess.Preprocess()
+pp = webookcare.postprocess.PostProcess()
 
 paraphrased_sentences_path = pathlib.Path("paraphrased_sentences.npy").absolute().as_posix()
 augmented_labels_path = pathlib.Path("augmented_labels.npy").absolute().as_posix()
