@@ -25,7 +25,17 @@ class Preprocess:
     def remove_special_chars(self, data):
         pattern = r'[`~!@#$%^&*()\-_=+,.\/?;:\\|\[\]{}]'
         if isinstance(data, collections.abc.Iterable):
-            cleaned_data = [re.sub(pattern, ' ', j) for i in data for j in i if i not in (None, numpy.nan,)]
+            # cleaned_data = [re.sub(pattern, ' ', j) for i in data for j in i if i not in (None, numpy.nan,)]
+            cleaned_data = [[re.sub(pattern, '', j) for j in i if re.sub(pattern, '', j)]
+                            for i in data]
+            # cleaned_data = []
+            # for i in data:
+            #     tmp_data = []
+            #     for j in i:
+            #         ss = re.sub(pattern, '', j)
+            #         if ss:
+            #             tmp_data.append(ss)
+            #     cleaned_data.append(tmp_data)
         elif isinstance(data, str):
             cleaned_data = [re.sub(pattern, ' ', i) for i in data if i not in (None, numpy.nan,)]
         else:
@@ -59,8 +69,21 @@ class Preprocess:
                 print(f"Non-UTF-8 character found in text at index {i}: {text[e.start:e.end]}")
                 
     def clean_non_utf8(self, data):
-        cleaned_data = [i.encode('utf-8', 'ignore').decode('utf-8', 'ignore') for i in data]
-        cleaned_data = [re.sub(r'[^\x00-\x7F]+', '', i) for i in cleaned_data]
+        if isinstance(data, list):
+            if all(isinstance(i, list) for i in data):
+                cleaned_data = [[j.encode('utf-8', 'ignore').decode('utf-8', 'ignore') for j in i] 
+                                for i in data]
+                cleaned_data = [[re.sub(r'[^\x00-\x7F]+', '', j) for j in i] 
+                                for i in cleaned_data]
+            else:
+                cleaned_data = [
+                    re.sub(r'[^\x00-\x7F]+', '', i.encode('utf-8', 'ignore').decode('utf-8', 'ignore')) 
+                    for i in data]
+        elif isinstance(data, str):
+            cleaned_data = [i.encode('utf-8', 'ignore').decode('utf-8', 'ignore') for i in data]
+            cleaned_data = [re.sub(r'[^\x00-\x7F]+', '', i) for i in cleaned_data]
+        else:
+            raise Exception('type not reognized!')
         return cleaned_data
     
     def retrieve_basic_info(self, data, info_needed):
