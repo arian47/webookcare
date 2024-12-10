@@ -29,16 +29,14 @@ def save(model, name, save_type):
         tensorflow.saved_model.save(model, base_path)
         
 def load(name):
-    base_path = create_dirs().get('base_path')
-    # checkpoint_dir = './checkpoints/MLP_int_1g_bigram_multihot_labels'
-    # checkpoint = tensorflow.train.Checkpoint(model=model)
-    # checkpoint.restore(tensorflow.train.latest_checkpoint(checkpoint_dir))
+    base_path = create_dirs().get('base_path').absolute()
+    # # checkpoint_dir = './checkpoints/MLP_int_1g_bigram_multihot_labels'
+    # # checkpoint = tensorflow.train.Checkpoint(model=model)
+    # # checkpoint.restore(tensorflow.train.latest_checkpoint(checkpoint_dir))
 
-    # Load the saved model (optional if using SavedModel format)
-    # loaded_model = tensorflow.saved_model.load(model_save_path)
-    model_path = list(base_path.rglob(f'{name}'))
-    assert len(model_path) == 1, 'too many models found!'
-    loaded_model = tensorflow.saved_model.load(model_path[0])
+    # Load the saved model (if using SavedModel format)
+    model_path = base_path.joinpath(f'{name}')
+    loaded_model = tensorflow.saved_model.load(model_path)
     
     # Example usage after loading
     # infer = loaded_model.signatures["serving_default"]

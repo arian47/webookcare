@@ -2,7 +2,7 @@ import tensorflow
 
 
 class MLP(tensorflow.keras.Model):
-    '''Multi Layer or Level ?! Perceptron
+    '''Multi Layer Perceptron
     
     Methods
     -------
@@ -26,6 +26,9 @@ class MLP(tensorflow.keras.Model):
             tvec_ngrams : int
             Default value is None. specifies the ngrams value passed to the textvectorization layer.
             
+            tvec_mxlen : int
+            Default value is None. specifies the maximum length value passed to the textvectorization layer.
+            
             dim : int
             usually the same value as the number of max tokens specified for the text vectorization
             layer.
@@ -33,6 +36,9 @@ class MLP(tensorflow.keras.Model):
             dense_units : list[int] 
             Default value is [128, 64, 1,]. specifies the number of units for the intermediary dense
             layers and the number of units for the last dense layer respectively.
+            
+            dropout_units : list[float] 
+            Default value is [.3, .5]. specifies the dropout values for the dropout layers.
             
             dense_activations : list[str]
             Default value is ['relu', 'sigmoid']. activation functions supplied to the dense layers;
@@ -53,11 +59,14 @@ class MLP(tensorflow.keras.Model):
         # self.text_vec_1 = tensorflow.keras.layers.TextVectorization(max_tokens=dim, output_mode=tvec_om,
                                                                     #  ngrams=tvec_ngrams, output_sequence_length=tvec_mxlen)
         # self.input_l = tensorflow.keras.layers.InputLayer(input_shape=(203,))
-        self.dense_1 = tensorflow.keras.layers.Dense(dense_units[0], activation=dense_activations[0])
+        self.dense_1 = tensorflow.keras.layers.Dense(dense_units[0], 
+                                                     activation=dense_activations[0])
         self.dropout_1 = tensorflow.keras.layers.Dropout(dropout_units[0])
-        self.dense_2 = tensorflow.keras.layers.Dense(dense_units[1], activation=dense_activations[0])
+        self.dense_2 = tensorflow.keras.layers.Dense(dense_units[1], 
+                                                     activation=dense_activations[0])
         self.dropout_2 = tensorflow.keras.layers.Dropout(dropout_units[-1])
-        self.dense_3 = tensorflow.keras.layers.Dense(dense_units[-1], activation=dense_activations[-1])
+        self.dense_3 = tensorflow.keras.layers.Dense(dense_units[-1], 
+                                                     activation=dense_activations[-1])
         # self.loss_metric = tensorflow.keras.metrics.MeanSquaredError(name='mse')
         # self.mae_metric = tensorflow.keras.metrics.MeanAbsoluteError(name='mae')
         self.loss_metric = tensorflow.keras.metrics.BinaryCrossentropy(name='binary_crossentropy')
