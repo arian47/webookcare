@@ -1,9 +1,7 @@
 import tensorflow
 import pathlib
 
-
 def create_dirs(spec=None):
-    # checkpoints_dir=pathlib.Path('saved_models/checkpoints/'),
     if not spec:
         dirs = dict(
             base_path=pathlib.Path('saved_models'),
@@ -19,7 +17,8 @@ def create_dirs(spec=None):
 def save(model, name, save_type):
     base_path = create_dirs().get('base_path').joinpath(name)
     if save_type == 'weigths':
-        model.save_weights(base_path.joinpath('MLP_int_1g_bigram_multihot_labels.tf'))
+        model.save_weights(
+            base_path.joinpath('MLP_int_1g_bigram_multihot_labels.tf'))
     elif save_type == 'checkpoints':
         checkpoints_dir = base_path.joinpath('checkpoints')
         create_dirs(checkpoints_dir)
@@ -30,16 +29,11 @@ def save(model, name, save_type):
         
 def load(name):
     base_path = create_dirs().get('base_path').absolute()
-    # # checkpoint_dir = './checkpoints/MLP_int_1g_bigram_multihot_labels'
-    # # checkpoint = tensorflow.train.Checkpoint(model=model)
-    # # checkpoint.restore(tensorflow.train.latest_checkpoint(checkpoint_dir))
 
     # Load the saved model (if using SavedModel format)
     model_path = base_path.joinpath(f'{name}')
     loaded_model = tensorflow.saved_model.load(model_path)
     
-    # Example usage after loading
-    # infer = loaded_model.signatures["serving_default"]
     return loaded_model
 
         
