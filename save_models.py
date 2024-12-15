@@ -35,6 +35,3 @@ def load(name):
     loaded_model = tensorflow.saved_model.load(model_path)
     
     return loaded_model
-
-        
-        

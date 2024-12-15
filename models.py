@@ -1,8 +1,8 @@
 import tensorflow
-import base_model
-import helper_layers
+import webookcare.base_model
+import webookcare.helper_layers
 
-class MLP(base_model.BaseModel):
+class MLP(webookcare.base_model.BaseModel):
     '''Multi Layer Perceptron
     
     Methods
@@ -99,7 +99,7 @@ class MLP(base_model.BaseModel):
         )
         return config
 
-class BasicDense(base_model.BaseModel):
+class BasicDense(webookcare.base_model.BaseModel):
     '''BasicDense is a simple model of a dense and a dropout layer
     
     Methods
@@ -189,7 +189,7 @@ class BasicDense(base_model.BaseModel):
         )
         return config
 
-class BasicEmbedding(base_model.BaseModel):
+class BasicEmbedding(webookcare.base_model.BaseModel):
     '''BasicEmbedding is a simple model of embedding, global average pooling, dense, 
     and dropout layers.
     
@@ -296,7 +296,7 @@ class BasicEmbedding(base_model.BaseModel):
         )
         return config
     
-class BasicLSTM(base_model.BaseModel):
+class BasicLSTM(webookcare.base_model.BaseModel):
     '''BasicLSTM is a simple model of embedding, bidirectional, dense, 
     and dropout layers.
     
@@ -400,7 +400,7 @@ class BasicLSTM(base_model.BaseModel):
         )
         return config
 
-class Transformer(base_model.BaseModel):
+class Transformer(webookcare.base_model.BaseModel):
     '''Transformer is a simple model of embedding, transformer encoder, global max pooling,
     dense, and dropout layers.
     
@@ -480,11 +480,11 @@ class Transformer(base_model.BaseModel):
         self.embed_1=tensorflow.keras.layers.Embedding(vocab_size, 
                                                        embed_dim,
                                                        input_shape=(None,))
-        self.trf_enc=helper_layers.TransformerEncoder(embed_dim, 
-                                                      dense_dim, 
-                                                      num_heads,
-                                                      name=enc_name, 
-                                                      dense_name=dense_stack_name)
+        self.trf_enc=webookcare.helper_layers.TransformerEncoder(embed_dim, 
+                                                                 dense_dim, 
+                                                                 num_heads,
+                                                                 name=enc_name, 
+                                                                 dense_name=dense_stack_name)
         self.globmxp=tensorflow.keras.layers.GlobalMaxPooling1D()
         self.dropout=tensorflow.keras.layers.Dropout(self.dropout_val)
         self.dense=tensorflow.keras.layers.Dense(self.dense_unit, 
@@ -527,7 +527,7 @@ class Transformer(base_model.BaseModel):
         return config
     
 
-class LSTM(base_model.BaseModel):
+class LSTM(webookcare.base_model.BaseModel):
     '''BasicLSTM is a simple model of embedding, bidirectional, dense, 
     and dropout layers.
     
@@ -589,12 +589,12 @@ class LSTM(base_model.BaseModel):
         self.dense_activations=dense_activations
         self.seq_len=seq_len
         self.num_heads=num_heads
-        self.positional_embed=helper_layers.PositionalEmbedding(self.seq_len, 
-                                                                self.dim, 
-                                                                self.o_dim)
-        self.encoder=helper_layers.TransformerEncoder(self.o_dim, 
-                                                      self.dense_units[0], 
-                                                      num_heads)
+        self.positional_embed=webookcare.helper_layers.PositionalEmbedding(self.seq_len, 
+                                                                           self.dim, 
+                                                                           self.o_dim)
+        self.encoder=webookcare.helper_layers.TransformerEncoder(self.o_dim, 
+                                                                 self.dense_units[0], 
+                                                                 num_heads)
         self.glob_max_pool=tensorflow.keras.layers.GlobalMaxPooling1D()
         self.dense=tensorflow.keras.layers.Dense(dense_units[1], 
                                                  activation=dense_activations)

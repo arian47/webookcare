@@ -1,7 +1,7 @@
 import tensorflow
 import shutil
 import pathlib
-import custom_metrics
+import webookcare.custom_metrics
 import tensorflow_docs
 
 class CommonConfs():
