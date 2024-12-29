@@ -5,6 +5,8 @@ import numpy
 import collections.abc
 
 class Preprocess:
+    """Simple preprocessing for the textual data
+    """
     def __init__(self):
         self.files_pattern = r'duties.*list'
         

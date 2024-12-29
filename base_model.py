@@ -100,7 +100,7 @@ class CommonConfs():
             monitor_val = 'val_mse'
             self.loss_fn = tensorflow.keras.losses.MeanSquaredError()
             self.loss_metric = tensorflow.keras.metrics.RootMeanSquaredError()
-            self.acc_metric = custom_metrics.R2Score()
+            self.acc_metric = webookcare.custom_metrics.R2Score()
             
         
         self.optimizer = tensorflow.keras.optimizers.RMSprop(learning_rate=self.lr_schedule)

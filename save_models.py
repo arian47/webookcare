@@ -27,11 +27,11 @@ def save(model, name, save_type):
     elif save_type == 'default':
         tensorflow.saved_model.save(model, base_path)
         
-def load(name):
-    base_path = create_dirs().get('base_path').absolute()
+def load(model_path):
+    # base_path = create_dirs().get('base_path').resolve()
 
     # Load the saved model (if using SavedModel format)
-    model_path = base_path.joinpath(f'{name}')
+    # model_path = base_path.joinpath(f'{name}')
     loaded_model = tensorflow.saved_model.load(model_path)
     
     return loaded_model

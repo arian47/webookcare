@@ -1,22 +1,71 @@
 import tensorflow
 
-class ProcessData:
-    def __init__(self, input_data, tvec_mt:int=20000, tvec_om:str='int', 
-                 ngrams:int=1, *args, **kwargs):
-        self.tvec = tensorflow.keras.layers.TextVectorization(max_tokens=tvec_mt,
-                                                              output_mode=tvec_om)
-        self.tvec.adapt(input_data)
+# class ProcessData:
+#     def __init__(self, input_data, tvec_mt:int=20000, tvec_om:str='int', 
+#                  ngrams:int=1, *args, **kwargs):
+#         self.tvec = tensorflow.keras.layers.TextVectorization(max_tokens=tvec_mt,
+#                                                               output_mode=tvec_om)
+#         self.tvec.adapt(input_data)
 
-class VectorizePrediction:
-    def __init__(self, input_data, tvec_mt:int=20000, tvec_om:str='int', 
-                 ngrams:int=1, vocab:list[str]=None, pad_to_max_tokens:bool=False,
+# class VectorizePrediction:
+#     def __init__(self, input_data, tvec_mt:int=20000, tvec_om:str='int', 
+#                  ngrams:int=1, vocab:list[str]=None, pad_to_max_tokens:bool=False,
+#                  output_sequence_length:int=None, *args, **kwargs):
+#         self.tvec = tensorflow.keras.layers.TextVectorization(max_tokens=tvec_mt,
+#                                                               output_mode=tvec_om,
+#                                                               vocabulary=vocab,
+#                                                               pad_to_max_tokens=pad_to_max_tokens,
+#                                                               output_sequence_length=output_sequence_length)
+
+
+class ProcessData:
+    """Helper layer used for vectorizing the training or data used for prediction tasks.
+    """
+    def __init__(self, training:bool=True, input_data:tensorflow.Tensor=None, tvec_mt:int=20000, tvec_om:str='int', 
+                 vocab:list[str]=None, pad_to_max_tokens:bool=False,
                  output_sequence_length:int=None, *args, **kwargs):
-        self.tvec = tensorflow.keras.layers.TextVectorization(max_tokens=tvec_mt,
-                                                              output_mode=tvec_om,
-                                                              vocabulary=vocab,
-                                                              pad_to_max_tokens=pad_to_max_tokens,
-                                                              output_sequence_length=output_sequence_length)
+        '''initialize the vectorizer layer object.
         
+        Parameters
+        ----------
+            training : bool
+            Default value is True. used to determine whether vectorization is done for training or prediction.
+            
+            input_data : tensorflow.Tensor
+            input data to be used for the training step if passed in.
+            
+            tvec_mt : int
+            Default value is True. max val for vectorization tokens.
+            
+            tvec_om : str
+            Default value is 'int'. output values type for the vectorized tensor of input data.
+            
+            vocab : list[str]
+            Default value is None. vocabulary passed for the predictions vectorization step.
+            
+            pad_to_max_tokens : bool
+            Default value is False. whether to pad to max tokens val or not.
+            
+            output_sequence_length : int
+            Default value is None.
+            
+            kwargs : iterable, optional
+            anyother user specified keywords args passed to the model.
+        '''
+        if training:
+            assert input_data, 'Training was chosen with no input data!'
+            self.tvec = tensorflow.keras.layers.TextVectorization(max_tokens=tvec_mt,
+                                                                  output_mode=tvec_om)
+            self.tvec.adapt(input_data)
+        else:
+            # assert vocab, 'Vocabulary not provided for the prediction step!'
+            self.tvec = tensorflow.keras.layers.TextVectorization(max_tokens=tvec_mt,
+                                                                  output_mode=tvec_om,
+                                                                  vocabulary=vocab,
+                                                                  pad_to_max_tokens=pad_to_max_tokens,
+                                                                  output_sequence_length=output_sequence_length)
+
+# TODO: remove unnecessary layers  
 class DenseStack(tensorflow.keras.layers.Layer):
     '''DenseStack is a simple dense stack used by transformer encoder.
     
