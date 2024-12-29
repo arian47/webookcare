@@ -18,8 +18,9 @@ import gc
 # VOCAB_PATH_RES = pathlib.Path("./train_data_int_1g_vocab.npy").absolute().as_posix()
 # VOCAB_PATH_RES = os.path.abspath("./train_data_int_1g_vocab.npy")
 current_dir = pathlib.Path(__file__).resolve().parent
-VOCAB_PATH_RES = os.path.join(current_dir, 
-                              "train_data_int_1g_vocab.npy").replace('\\', '/')
+VOCAB_PATH_RES = os.path.join(
+    current_dir, 
+    "train_data_int_1g_vocab.npy").replace('\\', '/')
 # print(VOCAB_PATH_RES)
 # VOCAB_PATH_RES = repr(VOCAB_PATH_RES)[1:-1]
 # VOCAB_PATH_RES = pathlib.Path("train_data_int_1g_vocab.npy")
@@ -28,10 +29,15 @@ VOCAB_PATH_RES = os.path.join(current_dir,
 # LABELS_VOCAB_PATH_RES = pathlib.Path('./mh_labels_vocab.npy').absolute().as_posix()
 # LABELS_VOCAB_PATH_RES = repr(LABELS_VOCAB_PATH_RES)[1:-1]
 # LABELS_VOCAB_PATH_RES = os.path.abspath('./mh_labels_vocab.npy')
-LABELS_VOCAB_PATH_RES = os.path.join(current_dir, 
-                                     "mh_labels_vocab.npy").replace('\\', '/')
+LABELS_VOCAB_PATH_RES = os.path.join(
+    current_dir, 
+    "mh_labels_vocab.npy").replace('\\', '/')
 # LABELS_VOCAB_PATH_RES = pathlib.Path('mh_labels_vocab.npy')
 # assert LABELS_VOCAB_PATH_RES.exists(), f'{LABELS_VOCAB_PATH_RES} file doesn\'t exist!'
+DEFAULT_MODEL_PATH = os.path.join(
+    current_dir, 
+    "saved_models/MLP_int_1g_unigram_multihot_labels").replace('\\', '/')
+
 
 
 # num of columns needed for the vectorized input string (num of columns for vectorized training data)
@@ -111,16 +117,13 @@ def determine_shapes(save_req=False):
 # @app
 # def load_model(name='MLP_int_1g_unigram_multihot_labels'):
 def load_model():
-    model_path = os.path.join(
-        current_dir, 
-        "saved_models/MLP_int_1g_unigram_multihot_labels").replace('\\', '/')
     try:
-        model = webookcare.save_models.load(model_path)
+        model = webookcare.save_models.load(DEFAULT_MODEL_PATH)
     except tensorflow.errors.ResourceExhaustedError or \
         tensorflow.errors.InternalError:
             tensorflow.keras.backend.clear_session()
             gc.collect()
-            model = webookcare.save_models.load(model_path)
+            model = webookcare.save_models.load(DEFAULT_MODEL_PATH)
     return model
 
 # @app
