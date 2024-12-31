@@ -2,8 +2,6 @@ import numpy
 import tensorflow
 import pathlib
 import os
-import logging
-import typer
 import webookcare.models
 import webookcare.postprocess
 import webookcare.preprocess
@@ -12,28 +10,13 @@ import webookcare.save_models
 from tensorflow.keras.backend import clear_session
 import gc
 
-# app = typer.Typer()
-
-# vocab for training data
-# VOCAB_PATH_RES = pathlib.Path("./train_data_int_1g_vocab.npy").absolute().as_posix()
-# VOCAB_PATH_RES = os.path.abspath("./train_data_int_1g_vocab.npy")
 current_dir = pathlib.Path(__file__).resolve().parent
 VOCAB_PATH_RES = os.path.join(
     current_dir, 
     "train_data_int_1g_vocab.npy").replace('\\', '/')
-# print(VOCAB_PATH_RES)
-# VOCAB_PATH_RES = repr(VOCAB_PATH_RES)[1:-1]
-# VOCAB_PATH_RES = pathlib.Path("train_data_int_1g_vocab.npy")
-# assert VOCAB_PATH_RES.exists(), f'{VOCAB_PATH_RES} file doesn\'t exist!'
-# vocab for multi-hot encoded labels
-# LABELS_VOCAB_PATH_RES = pathlib.Path('./mh_labels_vocab.npy').absolute().as_posix()
-# LABELS_VOCAB_PATH_RES = repr(LABELS_VOCAB_PATH_RES)[1:-1]
-# LABELS_VOCAB_PATH_RES = os.path.abspath('./mh_labels_vocab.npy')
 LABELS_VOCAB_PATH_RES = os.path.join(
     current_dir, 
     "mh_labels_vocab.npy").replace('\\', '/')
-# LABELS_VOCAB_PATH_RES = pathlib.Path('mh_labels_vocab.npy')
-# assert LABELS_VOCAB_PATH_RES.exists(), f'{LABELS_VOCAB_PATH_RES} file doesn\'t exist!'
 DEFAULT_MODEL_PATH = os.path.join(
     current_dir, 
     "saved_models/MLP_int_1g_unigram_multihot_labels").replace('\\', '/')
@@ -45,7 +28,6 @@ NUM_UNIQUE_ITEMS = 415
 # num of columns corresponding for multi-hot encoded labels
 NUM_LABELS_VOCAB_ITEMS = 12
 
-# @app
 def determine_shapes(save_req=False):
     # sentences that were paraphrased and saved before
     data = numpy.load("paraphrased_sentences.npy").flatten().tolist()
@@ -114,8 +96,6 @@ def determine_shapes(save_req=False):
     NUM_UNIQUE_ITEMS = train_data_od_t.shape[-1]
     return NUM_UNIQUE_ITEMS, NUM_LABELS_VOCAB_ITEMS
 
-# @app
-# def load_model(name='MLP_int_1g_unigram_multihot_labels'):
 def load_model():
     try:
         model = webookcare.save_models.load(DEFAULT_MODEL_PATH)
@@ -126,7 +106,6 @@ def load_model():
             model = webookcare.save_models.load(DEFAULT_MODEL_PATH)
     return model
 
-# @app
 def predict(data):
     vocab = numpy.load(VOCAB_PATH_RES)
     labels_vocab = numpy.load(LABELS_VOCAB_PATH_RES)
@@ -148,8 +127,8 @@ def predict(data):
     
     # loading the model
     model = load_model()
-    # print(model.__class__)
     
+    # predicting labels
     if "serving_default" in model.signatures:
         infer = model.signatures['serving_default']
         predictions = infer(prediction_txt)
@@ -159,9 +138,7 @@ def predict(data):
     else:
         predictions = model.predict(prediction_txt)
     
-    predictions = predictions[0]
-    # predicting labels
-    
+    predictions = predictions[0]    
     
     # if no labels are generated following steps would do more iterations forcing model to generate some
     STATE = True
@@ -195,15 +172,4 @@ def predict(data):
             if threshold < min_threshold + tolerance:
                 break
     return predicted_labels
-
-# print(predict(['Need help']))
-
-# if __name__ == '__main__':
-#     numpy.set_printoptions(threshold=numpy.inf)
-#     # Set TensorFlow logging level to ERROR
-#     tensorflow.get_logger().setLevel('ERROR')
-#     # Suppress warnings from the Python logging module
-#     logging.getLogger('tensorflow').setLevel(logging.ERROR)
-#     # app()
-    
     
