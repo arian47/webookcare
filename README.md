@@ -2,12 +2,12 @@
 
 ## Usage
 
-The requests are sent to a host you choose to run the main FastAPI app on. Currently, only the **patient ensemble model** has been created. This model relies on a few sub-models, including:
+Requests are sent to a host you choose to run the main FastAPI app on. Currently, only the **patient ensemble model** has been created. This model relies on several sub-models, including:
 
-- Care services recommender
-- Credentials recommender
-- Distance predictor
-- Collaborative filtering (used for ranking based on reviews)
+- **Care services recommender**
+- **Credentials recommender**
+- **Distance predictor**
+- **Collaborative filtering** (used for ranking based on reviews)
 
 ### To set up the server, follow these steps:
 
@@ -23,26 +23,32 @@ The requests are sent to a host you choose to run the main FastAPI app on. Curre
 
 ## Description
 
-The prediction consists of a weighted result of multiple models, including:
+The prediction will eventually consist of a weighted result from multiple models for **careseekers** and **HCWs**, including:
 
-- **Text classification model**: Used to predict bigram labels. This model is trained on data gathered from earlier versions of the application and additional data extracted from PDF documents using regular expression matching patterns. It's a multi-label classification task, and the model used is an MLP (Multilayer Perceptron), as there wasn't enough data available for effective use of sequence models. Text augmentation techniques were used to increase the training data.
+- **Service & Credentials Recommender models**: These models predict labels using the bag of n-grams technique due to limited data availability. The service recommender is trained on bigram labels, while the credentials recommender is trained on unigram labels. The models are trained on data gathered from earlier versions of the application and additional data extracted from PDF documents using regular expression matching patterns. The classification task is multi-label, and an MLP (Multilayer Perceptron) model is used due to insufficient data for sequence models. Text augmentation techniques were applied to increase the training dataset.
+  
+- **Location Predictor model**: A regression model based on the Haversine formula, predicting the distance and randomly chosen data during training.
+
+- **Review Ranking model**: Based on collaborative filtering, which is used for recommendation systems.
 
 ## More on Text Classification Model
 
-Several methods have been thought of to assist with paraphrasing and augmenting the text:
+Several methods have been considered to assist with paraphrasing and augmenting text:
 
 - **Manually rewrite sentences**: Alter sentence structure while retaining the original meaning.
-- **Synonym replacement**: Use a thesaurus or a library like NLTK to replace words with their synonyms.
-- **Grammatical restructuring**: Use predefined grammatical rules to restructure sentences.
+- **Open-source LLMs**: Like Ollama, which show great promise but require high GPU resources to run locally.
+- **Synonym replacement**: Use a thesaurus or libraries like NLTK to replace words with their synonyms.
+- **Grammatical restructuring**: Apply predefined grammatical rules to restructure sentences.
 - **Paraphrasing tools**: Use tools like QuillBot, Paraphraser.io, or APIs from services like TextRazor.
-- **Back-translation**: Translate the sentence to another language and back to the original language using services like Google Translate API or MarianMT.
-- **Advanced models for paraphrasing**: Use models such as BERT, GPT-3, T5, or Pegasus from Hugging Face Transformers.
-- **Text augmentation libraries**: Leverage libraries like `nlpaug` or `textattack` to perform text augmentation techniques.
-- **Crowdsourcing platforms**: Use platforms like Amazon Mechanical Turk to have multiple people paraphrase the sentences.
+- **Back-translation**: Translate the sentence to another language and back to the original using services like Google Translate API or MarianMT.
+- **Advanced models for paraphrasing**: Leverage models such as BERT, GPT-3, T5, or Pegasus from Hugging Face Transformers.
+- **Text augmentation libraries**: Use libraries like `nlpaug` or `textattack` to perform text augmentation techniques.
+- **Crowdsourcing platforms**: Platforms like Amazon Mechanical Turk can be used to have multiple people paraphrase the sentences.
 
 ---
 
 Feel free to contribute, open issues, or suggest improvements!
+
 
 
 overfitting is clearly visible even with the basic MLP structure (consisting of dense(8192), dropout(.3), dense(4096), dropout(.5), dense(len(multi label vocabulary))
