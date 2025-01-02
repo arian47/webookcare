@@ -1,34 +1,48 @@
-# webookcare
+# Webookcare
 
 ## Usage
-In order to get the result of care tasks that are predicted the following procedure must be followed:
-1- have the python up and running in your local environment
-2- install necessary packages with requirement.txt file ('python -m pip install -r requirements.txt')
-3- download "train_data_int_1g_vocab.npy" and "mh_labels_vocab.npy" in the same main dir as query.py
-4- use the CLI from your shell executing "python query.py predict 'string 1' 'string 2' ..."
+
+The requests are sent to a host you choose to run the main FastAPI app on. Currently, only the **patient ensemble model** has been created. This model relies on a few sub-models, including:
+
+- Care services recommender
+- Credentials recommender
+- Distance predictor
+- Collaborative filtering (used for ranking based on reviews)
+
+### To set up the server, follow these steps:
+
+1. **Access the saved models**: Ensure you have access to each saved model for the underlying components (or the training data to train them).
+2. **Save database credentials**: Store the necessary credentials to access your database in your local environment by creating a `.env` file. A script is provided to help with this.
+3. **Set up Python on your host machine**: Make sure Python is installed and set up correctly.
+4. **Install required packages**: Install the required dependencies by running:
+    ```bash
+    pip install -r requirements.txt
+    ```
+5. **Launch the FastAPI app**: Run the FastAPI server on your host machine.
+6. **Send requests**: Send requests to the host with the appropriate data format and the relevant endpoint.
 
 ## Description
-The prediction consists of weighted result of 
-- text classification model used to predict bigram labels trained on data gathered from earlier version of application user data and other data gathered from pdf documents utilizing re matching patterns which is a multilabel classification task and bag of bigrams are used for labels info gathered the model chosen for this is an MLP model as not enough data was available for effective use of sequence models and text augmentation techniques were used to increase the amount of train data available
 
+The prediction consists of a weighted result of multiple models, including:
 
+- **Text classification model**: Used to predict bigram labels. This model is trained on data gathered from earlier versions of the application and additional data extracted from PDF documents using regular expression matching patterns. It's a multi-label classification task, and the model used is an MLP (Multilayer Perceptron), as there wasn't enough data available for effective use of sequence models. Text augmentation techniques were used to increase the training data.
 
+## More on Text Classification Model
 
+Several methods have been thought of to assist with paraphrasing and augmenting the text:
 
+- **Manually rewrite sentences**: Alter sentence structure while retaining the original meaning.
+- **Synonym replacement**: Use a thesaurus or a library like NLTK to replace words with their synonyms.
+- **Grammatical restructuring**: Use predefined grammatical rules to restructure sentences.
+- **Paraphrasing tools**: Use tools like QuillBot, Paraphraser.io, or APIs from services like TextRazor.
+- **Back-translation**: Translate the sentence to another language and back to the original language using services like Google Translate API or MarianMT.
+- **Advanced models for paraphrasing**: Use models such as BERT, GPT-3, T5, or Pegasus from Hugging Face Transformers.
+- **Text augmentation libraries**: Leverage libraries like `nlpaug` or `textattack` to perform text augmentation techniques.
+- **Crowdsourcing platforms**: Use platforms like Amazon Mechanical Turk to have multiple people paraphrase the sentences.
 
+---
 
-
-
-## More on text classification model
-- methods thought to assist with paraphrasing:
-  - Manually rewrite sentences to convey the same meaning using different words and structures
-  - Replace words with their synonyms using a thesaurus or a library like NLTK.
-  - Use predefined grammatical rules to restructure sentences.
-  - Use paraphrasing tools like QuillBot, Paraphraser.io, or APIs provided by services like TextRazor
-  - Back-Translation; translate the sentence to another language and then back to the original language like Google Translate API or MarianMT
-  - models like BERT, GPT-3, T5, or Pegasus for paraphrasing Hugging Face Transformers
-  - Libraries like nlpaug or textattack for text augmentation techniques
-  - platforms like Amazon Mechanical Turk to have multiple people paraphrase the sentences
+Feel free to contribute, open issues, or suggest improvements!
 
 
 overfitting is clearly visible even with the basic MLP structure (consisting of dense(8192), dropout(.3), dense(4096), dropout(.5), dense(len(multi label vocabulary))
