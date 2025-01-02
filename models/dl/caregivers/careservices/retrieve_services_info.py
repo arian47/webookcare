@@ -11,6 +11,7 @@ CAREGIVERS_AND_SERVICES_NPY_PATH = 'caregivers_and_services.npy'
 DB_USERNAME = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 
+# TODO: transferring save and retrieval of info to a different module.
 def save_services(caregivers_and_services):
     tmp = [(j, i.get(j)) for i in caregivers_and_services for j in i]
 
@@ -19,11 +20,14 @@ def save_services(caregivers_and_services):
         writer.writerows(tmp)
 
     numpy.save(CAREGIVERS_AND_SERVICES_NPY_PATH, 
-            numpy.array(caregivers_and_services, dtype=object))
+               numpy.array(caregivers_and_services, dtype=object))
 
+# TODO: transferring save and retrieval of info to a different module.
 def load_services():
     pass
 
+# checking the services offered by all the caregivers which could be time consuming.
+# TODO: to break down for better filtering on needs
 def check_services(save:bool=False):
     connection = mysql.connector.connect(
     host='localhost',

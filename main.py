@@ -1,27 +1,18 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
 import webookcare
 import json
-
 import webookcare.patient_ensemble
+from webookcare.queries_api.patient.data_models import Patient
+
+#TODO: implementation of data model structure for CareGiver
+# from webookcare.queries_api.caregiver.data_models import CareGiver
 
 app = FastAPI()
 
 
-class Patient(BaseModel):
-    patient_id: int
-    job_description: str | None = None
-    rate: float | None = None
-    healthcare_setting: str | None = None
-    care_location : tuple[float, float] | None = None # latitude and longitude of the carelocation
-    property_type : str | None = None
-    health_condition : str | None = None
-    caregiver_type : str | None = None
-    credentials : str | None = None
-    careservices : list[str] | None = None
-    budget : float | int | None = None
-    care_date : float | None = None
-    
+# @app.post("/caregivers/")
+# async def get_candidates(caregiver: CareGiver):
+    # pass
 
 
 @app.post("/patients/")
@@ -33,7 +24,17 @@ async def get_candidates(patient: Patient):
         potential_caregivers
     ) = webookcare.patient_ensemble.rank_caregivers(
         patient_id = patient_dict.get('patient_id'),
-        patient_req = patient_dict.get('job_description')
+        patient_req = patient_dict.get('job_description'),
+        rate = patient_dict.get('rate'),
+        healthcare_setting = patient_dict.get('healthcare_setting'),
+        property_type = patient_dict.get('property_type'),
+        health_condition = patient_dict.get('health_condition'),
+        caregiver_type = patient_dict.get('caregiver_type'),
+        credentials = patient_dict.get('credentials'),
+        careservices = patient_dict.get('careservices'),
+        budget = patient_dict.get('budget'),
+        care_date = patient_dict.get('care_date'),
+        care_location = patient_dict.get('care_location')
     )
     
     response = dict(
@@ -41,8 +42,8 @@ async def get_candidates(patient: Patient):
         services=services,
         potential_caregivers=potential_caregivers
     )
-    # return json.dumps(response)
-    return response
+    return json.dumps(response)
+    # return response
     
     
     # test case
