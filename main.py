@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import webookcare
 import json
-import webookcare.patient_ensemble
+from webookcare.models.dl.patients.patient_ensemble import rank_caregivers
 from webookcare.queries_api.patient.data_models import Patient
 
 #TODO: implementation of data model structure for CareGiver
@@ -22,7 +22,7 @@ async def get_candidates(patient: Patient):
         credentials,
         services,
         potential_caregivers
-    ) = webookcare.patient_ensemble.rank_caregivers(
+    ) = rank_caregivers(
         patient_id = patient_dict.get('patient_id'),
         patient_req = patient_dict.get('job_description'),
         rate = patient_dict.get('rate'),

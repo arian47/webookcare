@@ -29,6 +29,25 @@ def load_services():
 # checking the services offered by all the caregivers which could be time consuming.
 # TODO: to break down for better filtering on needs
 def check_services(save:bool=False):
+    """
+    Fetches and associates caregivers with their corresponding care services.
+
+    This function queries the database for the list of care services, the caregivers associated 
+    with each care service, and the list of caregivers. It then associates each caregiver with
+    the services they are responsible for. Optionally, the results can be saved to a persistent 
+    storage (e.g., a file or another database).
+
+    Parameters
+    ----------
+    save : bool, optional
+        Whether to save the resulting caregiver-service associations. Default is False.
+    
+    Returns
+    -------
+    list of dict
+        A list where each dictionary represents a caregiver and their associated services,
+        in the form of `{caregiver_name: [care_service_name, ...]}`.
+    """
     connection = mysql.connector.connect(
     host='localhost',
     user=DB_USERNAME,

@@ -1,16 +1,14 @@
 import re
-import typer
+# import typer
 import logging
 import tensorflow
-from webookcare.patients.credentials_recommendation import main as credentials_recommender
-from webookcare.patients.service_recommendation import main as service_recommender
-from webookcare.caregivers.careservices.retrieve_services_info import check_services
-import webookcare.patients.service_recommendation
+from webookcare.models.dl.patients.credentials_recommendation import main as credentials_recommender
+from webookcare.models.dl.patients.service_recommendation import main as service_recommender
+from webookcare.models.dl.caregivers.careservices.retrieve_services_info import check_services
 from webookcare.queries_api.patient.data_models import Patient
 from typing import Tuple, List
-from datetime import datetime
 
-app = typer.Typer()
+# app = typer.Typer()
 
 # numpy.set_printoptions(threshold=numpy.inf)
 # Set TensorFlow logging level to ERROR

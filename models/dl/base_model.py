@@ -1,62 +1,51 @@
 import tensorflow
 import shutil
 import pathlib
-import webookcare.custom_metrics
+from webookcare.metrics.dl import custom_metrics
 import tensorflow_docs
 
 class CommonConfs():
-    """a class to form common configurations needed across different models.
+    """A class to form common configurations needed across different models.
     
     Methods
     -------
-    initialize_params(self): sets up the learning scheduler, optimizer, callbacks, metrics, epochs,
+    initialize_params(self): 
+        Sets up the learning scheduler, optimizer, callbacks, metrics, epochs,
         and loss function depending on the type of classification needed.
-    
     """
     def __init__(self, name:str, num_train_items:int, batch_size:int, 
                  classification_type:str, n_epochs:int=10, cls_or_reg:str='reg',
                  write_summary:bool=True, initial_lr:float=1e-4, 
                  log_dir:str='tensorboard_logs', sub_dir:str='', 
                  callbacks_stat:bool=True, *args, **kwargs):
-        """initialize a commonconf object holding common configuration values
+        """Initialize a CommonConfs object holding common configuration values
         across different models.
         
         Parameters
         ----------
-            name : str
-            user specified name.
-            
-            num_train_items : int
-            number of elements within the training dataset needed
-            to determine the learning schedulers decay steps.
-            
-            batch_size : int
-            batch size for the datasets passed in for the training.
-            
-            classification_type : str
-            'binary' or 'multiclass' classification used for the model
-            training.
-            
-            n_epochs : int
-            number of the training epochs.
-            
-            cls_or_reg : str
-            'cls' or 'reg' classification or regression for the training.
-            
-            write_summary : bool
-            Default is True. whether or not to create a summary writer.
-            
-            initial_lr : float
-            Default value is 1e-4. the initial value used for the learning rate.
-            
-            log_dir : str
-            Default value is 'tensorboard_logs'. the dir to write the summary info.
-            
-            sub_dir : str
-            Default value is ''. sub dir for each training phase.
-            
-            callbacks_stat : bool
-            Default is True. whether to use callbacks for the training process.
+        name : str
+            User specified name.
+        num_train_items : int
+            Number of elements within the training dataset needed to determine 
+            the learning scheduler's decay steps.
+        batch_size : int
+            Batch size for the datasets passed in for the training.
+        classification_type : str
+            'binary' or 'multiclass' classification used for the model training.
+        n_epochs : int, optional
+            Number of the training epochs (default is 10).
+        cls_or_reg : str, optional
+            'cls' or 'reg' classification or regression for the training (default is 'reg').
+        write_summary : bool, optional
+            Whether or not to create a summary writer (default is True).
+        initial_lr : float, optional
+            Initial value used for the learning rate (default is 1e-4).
+        log_dir : str, optional
+            Directory to write the summary info (default is 'tensorboard_logs').
+        sub_dir : str, optional
+            Subdirectory for each training phase (default is '').
+        callbacks_stat : bool, optional
+            Whether to use callbacks for the training process (default is True).
         """
         self.name = name
         self.num_train_items = num_train_items
@@ -71,12 +60,12 @@ class CommonConfs():
         self.callbacks_stat = callbacks_stat
     
     def initialize_params(self):
-        """sets up the learning scheduler, optimizer, callbacks, metrics, epochs,
+        """Sets up the learning scheduler, optimizer, callbacks, metrics, epochs,
         and loss function depending on the type of classification needed.
         
         Returns
         -------
-            None
+        None
         """
         self.lr_schedule = \
             tensorflow.keras.optimizers.schedules.ExponentialDecay(
@@ -100,7 +89,7 @@ class CommonConfs():
             monitor_val = 'val_mse'
             self.loss_fn = tensorflow.keras.losses.MeanSquaredError()
             self.loss_metric = tensorflow.keras.metrics.RootMeanSquaredError()
-            self.acc_metric = webookcare.custom_metrics.R2Score()
+            self.acc_metric = custom_metrics.R2Score()
             
         
         self.optimizer = tensorflow.keras.optimizers.RMSprop(learning_rate=self.lr_schedule)
@@ -131,48 +120,67 @@ class CommonConfs():
             )
 
 class BaseModel(tensorflow.keras.models.Model):
-    '''BaseModel Representing basic common operations.'''
+    '''BaseModel represents a basic structure for models with common operations, 
+    including training, evaluation, and TensorBoard logging.
+    
+    Attributes
+    ----------
+    model_name : str
+        The name of the model.
+    num_train_items : int
+        The number of training items, used for calculating learning rate decay steps.
+    batch_size : int
+        The batch size for training.
+    n_epochs : int
+        The number of epochs for training.
+    cls_or_reg : str
+        The task type, either 'cls' for classification or 'reg' for regression.
+    write_summary_state : bool
+        Whether to log training progress to TensorBoard.
+    initial_lr : float
+        The initial learning rate.
+    log_dir : str
+        The directory for TensorBoard logs.
+    sub_dir : str
+        Subdirectory for logs.
+    callbacks_state : bool
+        Whether to use callbacks during training.
+    classification_type : str
+        Specifies if the task is 'binary' or 'multiclass' classification.
+    conf : CommonConfs
+        The configuration object containing various settings for training.
+    '''
     def __init__(self, model_name, num_train_items:int, batch_size:int=32,
                  n_epochs:int=10, cls_or_reg:str='reg', write_summary_state:bool=True,
                  initial_lr:float=1e-4, log_dir:str='tensorboard_logs', callbacks_state:bool=True,
                  sub_dir:str='', classification_type:str='reg', *args, **kwargs):
         '''
+        Initializes the BaseModel with the provided configurations.
+        
         Parameters
         ----------
-            num_train_items : int
-            number of elements within the training dataset needed
-            to determine the learning schedulers decay steps.
-            
-            batch_size : int
-            batch size for the datasets passed in for the training.
-            
-            name : str
-            Default value is None. user specified name for the model obj.    
-            
-            n_epochs : int
-            Default value is 10. number of the training epochs.
-            
-            cls_or_reg : str
-            'cls' or 'reg' classification or regression for the training.
-            
-            write_summary_state : bool
-            Default value is True. whether to write summaries during training and validation
-            steps or not for use with tensorboard.
-            
-            initial_lr : float
-            Default value is 1e-4. initial value for the learning rate passed to the optimizer.
-            
-            log_dir : str
-            Default value is 'tensorboard_logs'. main dir for writing logs.
-            
-            callbacks_state : bool
-            Default value is True. whether to use callbacks or not.
-            
-            sub_dir : str
-            Default value is ''. sub dir for writing logs.
-            
-            classification_type : str
-            Default value is 'reg'. classification or reg for the task of training.
+        model_name : str
+            The name of the model.
+        num_train_items : int
+            The number of training samples.
+        batch_size : int, optional
+            The batch size for training (default is 32).
+        n_epochs : int, optional
+            The number of epochs (default is 10).
+        cls_or_reg : str, optional
+            Whether the model is for classification ('cls') or regression ('reg') (default is 'reg').
+        write_summary_state : bool, optional
+            Whether to write summaries to TensorBoard (default is True).
+        initial_lr : float, optional
+            The initial learning rate (default is 1e-4).
+        log_dir : str, optional
+            The main directory for logs (default is 'tensorboard_logs').
+        callbacks_state : bool, optional
+            Whether to use callbacks during training (default is True).
+        sub_dir : str, optional
+            Subdirectory for logs (default is '').
+        classification_type : str, optional
+            The classification type: 'binary' or 'multiclass' (default is 'reg').
         '''
         super().__init__(model_name)
         self.model_name=model_name
@@ -195,15 +203,17 @@ class BaseModel(tensorflow.keras.models.Model):
         self.conf.initialize_params()
         
         def close_summary_writer(self):
+            '''Closes the TensorBoard summary writer.'''
             self.conf.summary_writer.close() 
 
     def get_config(self):
-        '''builds the dictionary which hold necessary parameters to reconstruct
-        model obj.
+        '''Builds the dictionary which holds necessary parameters to reconstruct
+        the model object.
         
         Returns
         -------
-            dict obj
+        dict
+            A dictionary of configuration parameters for the model.
         '''
         config = super().get_config()
         config.update(
@@ -225,9 +235,22 @@ class BaseModel(tensorflow.keras.models.Model):
     
     @classmethod
     def from_config(cls, config):
+        '''Reconstructs a model from the configuration dictionary.
+        
+        Parameters
+        ----------
+        config : dict
+            The configuration dictionary to rebuild the model.
+        
+        Returns
+        -------
+        BaseModel
+            A newly reconstructed BaseModel object.
+        '''
         return cls(**config)
     
     def compile(self, optimizer=None, loss=None, metrics=None):
+        '''Compiles the model with the specified optimizer, loss function, and metrics.'''
         if not optimizer:
             self.optimizer = self.conf.optimizer
         elif optimizer:
@@ -249,15 +272,18 @@ class BaseModel(tensorflow.keras.models.Model):
         )
         
     def compute_loss(self, real_data, generated_data):
+        '''Computes the loss between real data and generated data.'''
         loss = self.loss_fn(real_data, 
                             generated_data)
         return loss
     
     def reset_metrics(self):
+        '''Resets the state of the metrics.'''
         for metric in self.metrics:
             metric.reset_states()
         
     def compute_metrics(self, real_data, generated_data):
+        '''Computes and returns the metrics for the real and generated data.'''
         self.loss_metric.update_state(real_data, 
                                       generated_data)
         self.acc_metric.update_state(real_data, 
@@ -266,10 +292,12 @@ class BaseModel(tensorflow.keras.models.Model):
     
     @property
     def metrics(self):
+        '''Returns the list of metrics to track.'''
         return [self.loss_metric,
                 self.acc_metric,]
     
     def train_step(self, inputs):
+        '''Performs a training step for the model.'''
         input_, target = inputs
         with tensorflow.GradientTape() as tape:
             output = self(input_, 
@@ -297,18 +325,7 @@ class BaseModel(tensorflow.keras.models.Model):
         return metrics
     
     def test_step(self, inputs):
-        '''Performs a testing step.
-        
-        Parameters
-        ----------
-        inputs : tuple
-            A tuple of input data and target data.
-        
-        Returns
-        -------
-        metrics : dict
-            Dictionary of metric names and their values.
-        '''
+        '''Performs a testing step for the model.'''
         input_, target = inputs
         output = self(input_, 
                       training=False)

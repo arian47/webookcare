@@ -2,11 +2,10 @@ import numpy
 import tensorflow
 import pathlib
 import os
-import webookcare.models
-import webookcare.postprocess
-import webookcare.preprocess
-import webookcare.helper_layers
-import webookcare.save_models
+from webookcare.tools.postprocess import PostProcess
+from webookcare.tools.preprocess import Preprocess
+from webookcare.layers import helper_layers
+from webookcare.tools import save_models
 from tensorflow.keras.backend import clear_session
 import gc
 
@@ -29,14 +28,35 @@ NUM_UNIQUE_ITEMS = 415
 NUM_LABELS_VOCAB_ITEMS = 12
 
 def determine_shapes(save_req=False):
+    """
+    Determines and returns the shapes of the train data and label vocabularies after 
+    processing steps such as cleaning, n-gram creation, padding, and multi-hot encoding.
+
+    This function performs the following steps:
+    1. Loads and preprocesses paraphrased sentences and augmented labels.
+    2. Cleans data and removes invalid entries (e.g., non-UTF8 characters, Nones).
+    3. Generates bigrams for the labels and vocabularies.
+    4. Pads and encodes the bigrams using multi-hot encoding.
+    5. Vectorizes the training data using a helper layer and returns the final shapes.
+
+    Parameters
+    ----------
+    save_req : bool, optional
+        If True, saves the vocabulary for labels and training data to disk. Default is False.
+
+    Returns
+    -------
+    tuple
+        A tuple containing the shapes of the unique items in training data and the label vocabulary items.
+    """
     # sentences that were paraphrased and saved before
     data = numpy.load("paraphrased_sentences.npy").flatten().tolist()
     # labels that were augmented and saved before 
     labels = numpy.load("augmented_labels.npy", 
                         allow_pickle=True).flatten().tolist()
     # initializing pre and post processing objs
-    preo = webookcare.preprocess.Preprocess()
-    pp = webookcare.postprocess.PostProcess()
+    preo = Preprocess()
+    pp = PostProcess()
     # removing special character, nones, non-utf8 chars, 
     train_labels_od = preo.remove_special_chars(labels)
 
@@ -70,14 +90,12 @@ def determine_shapes(save_req=False):
         train_labels_od_ng_vocab_padded
     )
     assert len(train_data_od) == len(train_labels_od)
-
-    print(len(train_data_od), len(train_labels_od))
     
     # creating helper layer object needed for vectorizing
     # shapes and saving
-    o = webookcare.helper_layers.ProcessData(train_data_od, 
-                                             20000, 
-                                             'int')
+    o = helper_layers.ProcessData(train_data_od, 
+                                  20000, 
+                                  'int')
     
     
     train_data_od_t = tensorflow.constant(train_data_od) # tensor of strings
@@ -97,22 +115,49 @@ def determine_shapes(save_req=False):
     return NUM_UNIQUE_ITEMS, NUM_LABELS_VOCAB_ITEMS
 
 def load_model():
+    """
+    Loads a pre-trained model from disk. If loading fails due to resource exhaustion or internal error,
+    the session is cleared, garbage collection is performed, and the model is attempted to load again.
+
+    Returns
+    -------
+    tensorflow.keras.Model
+        The loaded Keras model.
+    """
     try:
-        model = webookcare.save_models.load(DEFAULT_MODEL_PATH)
+        model = save_models.load(DEFAULT_MODEL_PATH)
     except tensorflow.errors.ResourceExhaustedError or \
         tensorflow.errors.InternalError:
             tensorflow.keras.backend.clear_session()
             gc.collect()
-            model = webookcare.save_models.load(DEFAULT_MODEL_PATH)
+            model = save_models.load(DEFAULT_MODEL_PATH)
     return model
 
 def predict(data):
+    """
+    Predicts labels for a given input data using a pre-trained model. The input is processed,
+    vectorized, and padded (if necessary), and then fed into the model to generate predictions.
+
+    The model output is post-processed by applying a thresholding mechanism to classify the predicted 
+    labels, which are then returned. The function will attempt to generate predictions for up to 10 
+    iterations if the initial prediction yields no labels.
+
+    Parameters
+    ----------
+    data : list or array-like
+        The input data to be predicted, typically a list of strings or sequences.
+
+    Returns
+    -------
+    list
+        A list of predicted labels corresponding to the input data.
+    """
     vocab = numpy.load(VOCAB_PATH_RES)
     labels_vocab = numpy.load(LABELS_VOCAB_PATH_RES)
     
     # converting input to tensors, vectorizing data and padding them if necessary
     data = tensorflow.constant(data)
-    o = webookcare.helper_layers.ProcessData(
+    o = helper_layers.ProcessData(
         training=False,
         tvec_om='int', 
         vocab=vocab,
