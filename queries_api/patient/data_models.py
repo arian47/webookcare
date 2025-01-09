@@ -2,128 +2,17 @@ from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Tuple
 from datetime import datetime
 from enum import Enum
+from webookcare.data_structs.structs import (
+    HealthcareSetting, 
+    PropertyType, 
+    HealthCondition, 
+    CaregiverType, 
+    CareServices, 
+    Credentials
+    )
 
-class HealthcareSetting(str, Enum):
-    """
-    Enumeration of possible healthcare settings where care can be provided.
-    
-    Attributes:
-        HOSPITAL: Care provided in a hospital setting
-        HOME: Care provided in patient's home
-        NURSING_FACILITY: Care provided in a nursing facility
-        ASSISTED_LIVING: Care provided in an assisted living facility
-        REHABILITATION_CENTER: Care provided in a rehabilitation center
-    """
-    HOSPITAL = "hospital"
-    HOME = "home"
-    NURSING_FACILITY = "nursing_facility"
-    ASSISTED_LIVING = "assisted_living"
-    REHABILITATION_CENTER = "rehabilitation_center"
 
-class PropertyType(str, Enum):
-    """
-    Enumeration of property types where care services can be delivered.
-    
-    Attributes:
-        HOUSE: Single-family home
-        APARTMENT: Apartment unit
-        FACILITY: Healthcare facility
-        CONDO: Condominium unit
-        RETIREMENT_COMMUNITY: Retirement community residence
-    """
-    HOUSE = "house"
-    APARTMENT = "apartment"
-    FACILITY = "facility"
-    CONDO = "condo"
-    RETIREMENT_COMMUNITY = "retirement_community"
-
-class HealthCondition(str, Enum):
-    """
-    Enumeration of possible patient health conditions.
-    
-    Attributes:
-        GOOD: Patient in good health, minimal assistance needed
-        STABLE: Patient condition is stable
-        MODERATE: Patient requires moderate level of care
-        SERIOUS: Patient requires serious medical attention
-        CRITICAL: Patient requires critical care
-        REQUIRES_MONITORING: Patient needs constant monitoring
-    """
-    GOOD = "good"
-    STABLE = "stable"
-    MODERATE = "moderate"
-    SERIOUS = "serious"
-    CRITICAL = "critical"
-    REQUIRES_MONITORING = "requires_monitoring"
-    
-class CaregiverType(str, Enum):
-    """
-    Enumeration of different types of caregivers available.
-    
-    Attributes:
-        REGISTERED_NURSE: Licensed RN
-        LICENSED_PRACTITIONER: Licensed healthcare practitioner
-        CERTIFIED_NURSING_ASSISTANT: Certified nursing assistant
-        HOME_HEALTH_AIDE: Home health aide
-        PERSONAL_CARE_ASSISTANT: Personal care assistant
-        PHYSICAL_THERAPIST: Licensed physical therapist
-        OCCUPATIONAL_THERAPIST: Licensed occupational therapist
-    """
-    REGISTERED_NURSE = "registered_nurse"
-    LICENSED_PRACTITIONER = "licensed_practitioner"
-    CERTIFIED_NURSING_ASSISTANT = "certified_nursing_assistant"
-    HOME_HEALTH_AIDE = "home_health_aide"
-    PERSONAL_CARE_ASSISTANT = "personal_care_assistant"
-    PHYSICAL_THERAPIST = "physical_therapist"
-    OCCUPATIONAL_THERAPIST = "occupational_therapist"
-
-class CareServices(str, Enum):
-    """
-    Enumeration of available care services.
-    
-    Attributes:
-        MEDICATION_MANAGEMENT: Assistance with medications
-        WOUND_CARE: Wound dressing and care
-        MOBILITY_ASSISTANCE: Help with movement and transfers
-        PERSONAL_HYGIENE: Assistance with personal care
-        MEAL_PREPARATION: Help with meal preparation
-        PHYSICAL_THERAPY: Physical therapy services
-        VITAL_SIGNS_MONITORING: Monitoring of vital signs
-        COMPANIONSHIP: Companionship services
-    """
-    MEDICATION_MANAGEMENT = "medication_management"
-    WOUND_CARE = "wound_care"
-    MOBILITY_ASSISTANCE = "mobility_assistance"
-    PERSONAL_HYGIENE = "personal_hygiene"
-    MEAL_PREPARATION = "meal_preparation"
-    PHYSICAL_THERAPY = "physical_therapy"
-    VITAL_SIGNS_MONITORING = "vital_signs_monitoring"
-    COMPANIONSHIP = "companionship"
-
-class Credentials(str, Enum):
-    """
-    Enumeration of possible caregiver credentials.
-    
-    Attributes:
-        RN: Registered Nurse license
-        LPN: Licensed Practical Nurse license
-        CNA: Certified Nursing Assistant certification
-        HHA: Home Health Aide certification
-        PT: Physical Therapist license
-        OT: Occupational Therapist license
-        CPR_CERTIFIED: CPR certification
-        FIRST_AID_CERTIFIED: First Aid certification
-    """
-    RN = "registered_nurse"
-    LPN = "licensed_practical_nurse"
-    CNA = "certified_nursing_assistant"
-    HHA = "home_health_aide"
-    PT = "physical_therapist"
-    OT = "occupational_therapist"
-    CPR_CERTIFIED = "cpr_certified"
-    FIRST_AID_CERTIFIED = "first_aid_certified"
-
-class Patient(BaseModel):
+class PatientReq(BaseModel):
     """
     Pydantic model representing a patient care request with all necessary details.
     
