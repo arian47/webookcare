@@ -31,9 +31,9 @@ class CareWorkerType(str, Enum):
 
 
 # Enum for Qualifications, Certifications, and Trainings
-class Qualification(str, Enum):
+class Qualifications(str, Enum):
     """
-    Enumeration of qualifications, certifications, and trainings relevant to care workers.
+    Enumeration of qualifications which includes certifications, and trainings relevant to care workers.
 
     This class defines a set of qualifications commonly required or valued for roles in caregiving, 
     childcare, healthcare, and related fields. Each qualification is represented as a string value.
@@ -91,6 +91,21 @@ class Qualification(str, Enum):
         CLASS_5_DRIVERS_LICENCE: Possession of a Class 5 driver's licence.
         CLASS_4_DRIVERS_LICENCE: Possession of a Class 4 driver's licence.
         OWNS_A_CAR: Indicates ownership of a personal vehicle.
+        OPEN_HEART_CARE: Operating Room – Open Heart/Cardio Vascular Intensive Care with Balloon Pump Certification.
+        NRP: Neonatal Resuscitation Program.
+        PALS: Pediatric Advanced Life Support.
+        ENPC: Emergency Nursing Pediatric Course.
+        ACLS: Advanced Cardiac Life Support.
+        TNCC: Trauma Nursing Core Course.
+        ATLS: Advanced Trauma Life Support.
+        BLS: Basic Life Support.
+        CTAS: Canadian Triage and Acuity Score.
+        PEWS: Pediatric Early Warning System.
+        CPR: Cardiopulmonary Resuscitation.
+        CRISIS_INTERVENTION: Training in Crisis Intervention.
+        ACQUIRED_BRAIN_INJURY: Training related to Acquired Brain Injury.
+        DOT_MEDICATION: Directly Observed Therapy (DOT) Medication Training.
+        MENTAL_HEALTH_RESPONSE: Mental Health Response Training.
     """
     FIRST_AID_LEVEL_ONE = "First Aid Level One"
     CPR_AED = "CPR/AED"
@@ -144,53 +159,26 @@ class Qualification(str, Enum):
     CLASS_5_DRIVERS_LICENCE = "Class 5 Driver's Licence"
     CLASS_4_DRIVERS_LICENCE = "Class 4 Driver's Licence"
     OWNS_A_CAR = "Owns a car"
+    OPEN_HEART_CARE = "Operating Room – Open Heart/Cardio Vascular Intensive Care with Balloon Pump Certification"
+    NRP = "NRP- Neonatal Resuscitation Program"
+    PALS = "PALS- Pediatric Advanced Life Support"
+    ENPC = "ENPC- Emergency Nursing Pediatric Course"
+    ACLS = "ACLS – Advanced Cardiac Life Support"
+    TNCC = "TNCC- Trauma Nursing Core Course"
+    ATLS = "ATLS- Advanced Trauma Life Support"
+    BLS = "BLS – Basic Life Support"
+    CTAS = "CTAS – Canadian Triage and Acuity Score"
+    PEWS = "PEWS- Pediatric Early Warning System"
+    CPR = "CPR-Cardiopulmonary Resuscitation"
+    ACQUIRED_BRAIN_INJURY = "Acquired Brain Injury Training"
+    DOT_MEDICATION = "DOT Medication Training"
+    MENTAL_HEALTH_RESPONSE = "Mental Health Response Training"
+    VIOLENCE_PREVENTION = "Violence Prevention"
+    INFECTION_CONTROL = "Infection Prevention and Control"
+    SAFE_CLIENT_HANDLING = "Safe Client Handling"
+    DIVERSITY_COMPETENCY = "Diversity Competency"
 
-class HealthCareSkills(str, Enum):
-    """
-    Enumeration of healthcare-related skills, certifications, and responsibilities.
-    
-    Attributes:
-        CRITICAL_INCIDENT_MANAGEMENT: Managing critical incidents in healthcare settings.
-        COMPUTER_ASSISTANCE: Providing computer assistance and technical support.
-        CASE_MANAGEMENT: Coordinating care and services for patients.
-        CARE_PLAN_DEVELOPMENT: Developing care plans for patients.
-        MEDICATION_INJECTION: Administering injectable medications.
-        NARCOTIC_ADMINISTRATION: Administering narcotic medications.
-        SUB_CUE_MEDICATIONS: Handling subcutaneous medications, including patches.
-        ORAL_MEDICATION_ADMINISTRATION: Administering oral medications.
-        BOWEL_ROUTINES: Managing bowel routines, including suppositories and enemas.
-        CATHETERISATION: Performing catheterisation procedures.
-        STOCKINGS: Assisting with compression stockings.
-        CONFLICT_RESOLUTION: Resolving conflicts in healthcare settings.
-        SCHEDULE_CREATION: Creating and managing schedules.
-        CRISIS_MANAGEMENT: Handling crises effectively.
-        PROGRAM_DEVELOPMENT: Developing healthcare programs.
-        SAFE_CLIENT_HANDLING: Ensuring the safe handling of clients.
-        INFECTION_CONTROL: Implementing infection prevention and control measures.
-        VIOLENCE_PREVENTION: Addressing and preventing violence in healthcare.
-        CHARTING: Maintaining accurate patient records and charts.
-        DEMENTIA_CARE: Providing specialized care for dementia patients.
-        CHILD_SUPERVISION: Supervising children in various care settings.
-        EARLY_CHILDHOOD_EDUCATION: Educating young children with a focus on early learning.
-        PHYSICAL_DISABILITIES: Supporting individuals with physical disabilities.
-        NUTRITION: Providing nutritional guidance and care.
-        INFANT_CARE: Caring for infants, including feeding and hygiene.
-        SOCIALIZATION_PLAY_BASED_LEARNING: Encouraging socialization and play-based learning.
-        SAFETY_PLANNING: Developing safety plans for clients.
-        EMOTIONAL_SUPPORT: Offering emotional support to clients.
-        ADVOCACY: Advocating for client needs and rights.
-        BEHAVIOR_MANAGEMENT: Managing and intervening in behavioral issues.
-        CHILD_ABUSE_PREVENTION: Preventing and responding to child abuse and neglect.
-        ENVIRONMENTAL_HEALTH_SAFETY: Maintaining health and safety in the environment.
-        LIFE_SKILLS: Teaching life skills to clients.
-        SOCIAL_SUPPORT: Providing social support to individuals.
-        COMMUNICATION_STRATEGIES: Employing effective communication strategies.
-        CURRICULUM_PLANNING: Planning educational curricula.
-        EARLY_CHILDHOOD_LITERACY: Promoting literacy in early childhood.
-        LANGUAGE_DEVELOPMENT: Supporting language development in children.
-        CPR: Administering cardiopulmonary resuscitation (CPR).
-        ADVANCED_CERTIFICATIONS: Holding advanced certifications like ACLS, PALS, and TNCC.
-    """
+class Skills(Enum):
     CRITICAL_INCIDENT_MANAGEMENT = "Critical Incident Management"
     COMPUTER_ASSISTANCE = "Computer Assistance"
     CASE_MANAGEMENT = "Case Management"
@@ -208,20 +196,7 @@ class HealthCareSkills(str, Enum):
     SCHEDULE_CREATION = "Create Schedules"
     CRISIS_MANAGEMENT = "Crisis Management"
     PROGRAM_DEVELOPMENT = "Develop Programs"
-    OPEN_HEART_CARE = "Operating Room – Open Heart/Cardio Vascular Intensive Care with Balloon Pump Certification"
-    NRP = "NRP- Neonatal Resuscitation Program"
-    PALS = "PALS- Pediatric Advanced Life Support"
-    ENPC = "ENPC- Emergency Nursing Pediatric Course"
-    ACLS = "ACLS – Advanced Cardiac Life Support"
-    TNCC = "TNCC- Trauma Nursing Core Course"
-    ATLS = "ATLS- Advanced Trauma Life Support"
-    BLS = "BLS – Basic Life Support"
-    CTAS = "CTAS – Canadian Triage and Acuity Score"
-    PEWS = "PEWS- Pediatric Early Warning System"
-    STRANGER_IN_CRISIS = "Stranger in Crisis"
-    CPR = "CPR-Cardiopulmonary Resuscitation"
     CRISIS_INTERVENTION = "Crisis Intervention"
-    ACQUIRED_BRAIN_INJURY = "Acquired Brain Injury Training"
     DOT_MEDICATION = "DOT Medication Training"
     DOSE_INHALERS = "Dose Inhalers"
     INSULIN = "Insulin"
@@ -234,7 +209,6 @@ class HealthCareSkills(str, Enum):
     VIOLENCE_PREVENTION = "Violence Prevention"
     INFECTION_CONTROL = "Infection Prevention and Control"
     DEMENTIA_CARE = "Dementia Care"
-    MENTAL_HEALTH_RESPONSE = "Mental Health Response Training"
     EDUCATOR = "Educator"
     CHILD_SUPERVISION = "Child Supervision"
     DAILY_CHILD_CARE = "Daily Child Care"
@@ -294,7 +268,6 @@ class HealthCareSkills(str, Enum):
     SCHEDULING = "Scheduling"
     SAFETY_SECURITY = "Safety and Security"
 
-
 class HealthExpertise(str, Enum):
     ADDICTIONS = "Addictions"
     ALS = "ALS"
@@ -331,9 +304,6 @@ class HealthExpertise(str, Enum):
     SPINAL_CORD_INJURIES = "Spinal Cord Injuries"
     TRACHEOTOMY_VENTILATION = "Tracheotomy/Ventilation"
     VISION_EYE_DISORDERS = "Vision and Eye Disorders"
-
-
-
 
 # Enum for Care Services
 class CareServices(str, Enum):

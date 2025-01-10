@@ -1,5 +1,8 @@
+from tensorflow.keras.backend import clear_session
 import tensorflow
 import pathlib
+import gc
+
 
 def create_dirs(spec=None):
     if not spec:
@@ -28,10 +31,24 @@ def save(model, name, save_type):
         tensorflow.saved_model.save(model, base_path)
         
 def load(model_path):
-    # base_path = create_dirs().get('base_path').resolve()
+    """
+    Loads a pre-trained model from disk. If loading fails due to resource exhaustion or internal error,
+    the session is cleared, garbage collection is performed, and the model is attempted to load again.
 
-    # Load the saved model (if using SavedModel format)
-    # model_path = base_path.joinpath(f'{name}')
-    loaded_model = tensorflow.saved_model.load(model_path)
-    
+    Returns
+    -------
+    tensorflow.keras.Model
+        The loaded Keras model.
+    """
+    try:
+        # base_path = create_dirs().get('base_path').resolve()
+
+        # Load the saved model (if using SavedModel format)
+        # model_path = base_path.joinpath(f'{name}')
+        loaded_model = tensorflow.saved_model.load(model_path)
+    except tensorflow.errors.ResourceExhaustedError or \
+        tensorflow.errors.InternalError:
+            tensorflow.keras.backend.clear_session()
+            gc.collect()
+            model = loaded_model.load(model_path)
     return loaded_model
