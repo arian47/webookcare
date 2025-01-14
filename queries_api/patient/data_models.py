@@ -6,9 +6,9 @@ from webookcare.data_structs.structs import (
     HealthcareSetting, 
     PropertyType, 
     HealthCondition, 
-    CaregiverType, 
+    CareWorkerType, 
     CareServices, 
-    Credentials
+    Qualifications
     )
 
 
@@ -61,11 +61,11 @@ class PatientReq(BaseModel):
         default=None,
         description="Current health condition of the patient"
     )
-    caregiver_type : CaregiverType | None = Field(
+    caregiver_type : CareWorkerType | None = Field(
         default=None,
         description="Type of caregiver required for the job"
     )
-    credentials : list[Credentials] | None = Field(
+    credentials : list[Qualifications] | None = Field(
         default=None,
         description="Required credentials for the caregiver"
     )

@@ -146,7 +146,6 @@ class Qualifications(str, Enum):
     DOT_MEDICATION_TRAINING = "DOT Medication Training"
     DIVERSITY_COMPETENCY = "Diversity Competency"
     SAFE_CLIENT_HANDLING = "Safe Client Handling"
-    VIOLENCE_PREVENTION = "Violence Prevention"
     INFECTION_PREVENTION_AND_CONTROL = "Infection Prevention and Control"
     DEMENTIA_CARE = "Dementia Care"
     MENTAL_HEALTH_RESPONSE_TRAINING = "Mental Health Response Training"
@@ -175,8 +174,6 @@ class Qualifications(str, Enum):
     MENTAL_HEALTH_RESPONSE = "Mental Health Response Training"
     VIOLENCE_PREVENTION = "Violence Prevention"
     INFECTION_CONTROL = "Infection Prevention and Control"
-    SAFE_CLIENT_HANDLING = "Safe Client Handling"
-    DIVERSITY_COMPETENCY = "Diversity Competency"
 
 class Skills(Enum):
     CRITICAL_INCIDENT_MANAGEMENT = "Critical Incident Management"

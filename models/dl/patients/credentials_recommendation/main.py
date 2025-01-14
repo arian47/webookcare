@@ -1,17 +1,19 @@
 # import numpy
 # import tensorflow
-import pathlib
-import os
 # import webookcare.models
 # from webookcare.tools.postprocess import PostProcess
 # from webookcare.tools.preprocess import Preprocess
 # from webookcare.layers import helper_layers
 # from webookcare.tools import save_models
-from webookcare.tools.NLP.misc import (train, 
-                                       predict, 
-                                       determine_shapes)
-from tensorflow.keras.backend import clear_session
-import gc
+# from tensorflow.keras.backend import clear_session
+# import gc
+import pathlib
+import os
+from webookcare.tools.NLP.misc import (
+    train, 
+    predict, 
+    determine_shapes
+    )
 
 current_dir = pathlib.Path(__file__).resolve().parent
 
@@ -49,8 +51,7 @@ def train_model(epochs=10,
           epochs=epochs,
           batch_size=batch_size,
           model_path=model_path,
-          save_files=save_files,
-          )
+          save_files=save_files)
     print('Training complete.')
 
 def predict_data(data):
@@ -60,8 +61,7 @@ def predict_data(data):
          save_req=False,
          data_file_path=DATA_FILE_PATH,
          labels_file_path=LABELS_FILE_PATH,
-         num_ngrams=NUM_NGRAMS
-     )
+         num_ngrams=NUM_NGRAMS)
     # test case
     assert NUM_UNIQUE_ITEMS == 415
     assert NUM_LABELS_VOCAB_ITEMS == 12

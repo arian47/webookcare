@@ -215,7 +215,48 @@ def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str
     services: List[str] = service_recommender.predict(
         criteria['job_description']
     )
-    potential_caregivers: List[str] = match_services(services)
-    return (credentials, 
-            services, 
-            potential_caregivers)
+    potential_caregivers_cred: List[str] | None = match_credentials(credentials)
+    potential_caregivers_serv: List[str] | None = match_services(services)
+    
+    overlap = []
+    for i in (potential_caregivers_cred, 
+              potential_caregivers_serv):
+        if i:
+            assert isinstance(i, list)
+            for j in i:
+                if j not in overlap:
+                    overlap.append(j)
+    
+    return sorted(overlap)
+    
+    
+    # return (credentials, 
+            # services, 
+            # potential_caregivers)
+
+
+# print(rank_caregivers(patient = PatientReq({
+        # "patient_id": 123,
+        # "job_description": "I need a registered nurse who is CPR certified. to help mom after she has been back from the hospital",
+        # "healthcare_setting": "home",
+        # "caregiver_type": "registered_nurse",
+        # "credentials": ["registered_nurse", "cpr_certified"],
+        # "care_location": (40.7128, -74.0060)})))
+
+# data = {
+#     "patient_id": 123,
+#     "job_description": """
+#     mom is very sick she is need of help from an experienced caregiver
+#     she has recently got home from ICU""",
+#     "rate": 25.5,
+#     "healthcare_setting": "Hospital",
+#     "care_location": [37.7749, -122.4194],
+#     "property_type": "Apartment",
+#     "health_condition": "Post-surgery care",
+#     "caregiver_type": "Registered Nurse",
+#     "credentials": "CPR certified",
+#     "careservices": ["Dressing wounds", "Monitoring vital signs"],
+#     "budget": 1500,
+#     "care_date": 1672531200
+# }
+# print(rank_caregivers(data))
