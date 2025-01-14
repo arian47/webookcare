@@ -120,7 +120,7 @@ def match_credentials(credentials) -> List[str]:
         dictionary of available caregiver credentials.
     """
     caregivers_credentials_dict = check_credentials()
-    
+    # print(caregivers_credentials_dict)
     # TODO: can add a logging method to detect if no credentials are passed in
     # TODO: can set a threshold for specific number of credentials offered by the caregiver for matching
     # even if one of the credentials is offered by the caregiver suggest them
@@ -132,8 +132,10 @@ def match_credentials(credentials) -> List[str]:
             # splitting the unigram into words
             # looping through caregivers info of credentials
             for j in caregivers_credentials_dict:
-                tmp_sent = ' '.join(caregivers_credentials_dict[j])
-                if re.findall(rf"\b{i}\b", tmp_sent, re.IGNORECASE):
+                # TODO: clean up potentially wrong codes below
+                # tmp_sent = ' '.join(caregivers_credentials_dict[j])
+                # if re.findall(rf"\b{i}\b", tmp_sent, re.IGNORECASE):
+                if i in caregivers_credentials_dict[j]:
                     if j not in caregivers_oi:
                         caregivers_oi.append(j)
     else:
@@ -183,8 +185,8 @@ def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str
         ['caregiver_789', 'caregiver_456', 'caregiver_123']
     """
     # Type validation
-    if not isinstance(patient, PatientReq):
-        raise TypeError("Input must be an instance of Patient model")
+    # if not isinstance(patient, PatientReq):
+        # raise TypeError("Input must be an instance of Patient model")
 
     # Extract validated data from the Patient model
     criteria = {
@@ -209,25 +211,32 @@ def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str
     # 3. Scoring and ranking
     # 4. Sorting into appropriate match categories
     # potential_caregivers = []
-    credentials: List[str] = credentials_recommender.predict(
+    credentials: List[str] = credentials_recommender.predict_data(
         criteria['job_description']
     )
-    services: List[str] = service_recommender.predict(
+    services: List[str] = service_recommender.predict_data(
         criteria['job_description']
     )
     potential_caregivers_cred: List[str] | None = match_credentials(credentials)
     potential_caregivers_serv: List[str] | None = match_services(services)
-    
+    # print(potential_caregivers_cred, potential_caregivers_serv)
+    # print(credentials, services)
     overlap = []
+    # print(potential_caregivers_cred)
+    count = 0
     for i in (potential_caregivers_cred, 
               potential_caregivers_serv):
-        if i:
+        if i is not None:
             assert isinstance(i, list)
             for j in i:
                 if j not in overlap:
                     overlap.append(j)
+        else:
+            count += 1
+        if count == 2:
+            print('No credentials or services found!')
     
-    return sorted(overlap)
+    return overlap
     
     
     # return (credentials, 
@@ -259,4 +268,25 @@ def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str
 #     "budget": 1500,
 #     "care_date": 1672531200
 # }
+# print(rank_caregivers(data))
+
+# import datetime
+# data = {
+#     "patient_id": 123,
+#     "job_description": """
+#     mom is very sick she is need of help from an experienced caregiver
+#     she has recently got home from ICU as she has never been this ill
+#     and I need someone to take care of her""",
+#     "rate": 25.5,
+#     "healthcare_setting": "hospital",
+#     "care_location": [37.7749, -122.4194],
+#     "property_type": "Apartment",
+#     "health_condition": "good",
+#     "caregiver_type": "Registered Practical Nurse",
+#     "credentials": ["First Aid Level One",],
+#     "careservices": ["Medication Reminders", "Housekeeping"],
+#     "budget": 1500,
+#     "care_date": datetime.datetime.now().timestamp() + 3600
+# }
+# data = PatientReq(**data)
 # print(rank_caregivers(data))

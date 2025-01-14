@@ -2,6 +2,7 @@ import numpy
 import mysql.connector
 import csv
 import os
+import re
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -106,11 +107,16 @@ def check_credentials(save:bool=False):
         # for each user
         for j in i:
             tmp = []
+            ntmp = []
             for x in i[j]:
                 if i[j][x] == True:
                     tmp.append(x)
             if tmp:
-                tmp_dict[j] = tmp
+                for i in tmp:
+                    res = re.sub(r"_", "", i)
+                    ntmp.append(res)
+                tmp_dict[j] = ntmp
+                
     
     return tmp_dict
 

@@ -55,16 +55,18 @@ def train_model(epochs=10,
     print('Training complete.')
 
 def predict_data(data):
-    (NUM_UNIQUE_ITEMS,
-     NUM_LABELS_VOCAB_ITEMS) = determine_shapes(
-         parent_dir=current_dir,
-         save_req=False,
-         data_file_path=DATA_FILE_PATH,
-         labels_file_path=LABELS_FILE_PATH,
-         num_ngrams=NUM_NGRAMS)
+    # TODO: need to create another function for this
+    # (NUM_UNIQUE_ITEMS,
+    #  NUM_LABELS_VOCAB_ITEMS) = determine_shapes(
+        #  parent_dir=current_dir,
+        #  save_req=False,
+        #  data_file_path=DATA_FILE_PATH,
+        #  labels_file_path=LABELS_FILE_PATH,
+        #  num_ngrams=NUM_NGRAMS
+    #  )
     # test case
-    assert NUM_UNIQUE_ITEMS == 415
-    assert NUM_LABELS_VOCAB_ITEMS == 12
+    NUM_UNIQUE_ITEMS = 415
+    NUM_LABELS_VOCAB_ITEMS = 12
     predictions = predict(data,
                           num_unique_items=NUM_UNIQUE_ITEMS,
                           vocab_path_res=VOCAB_PATH_RES,

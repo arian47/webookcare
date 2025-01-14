@@ -8,6 +8,8 @@ import pathlib
 import tensorflow
 import webookcare.models
 
+# TODO: need to differentiate between the way determine_shapes works 
+# on the new and seen data
 def determine_shapes(parent_dir,
                      save_req=False,
                      data_file_path="paraphrased_sentences.npy", 
@@ -84,9 +86,10 @@ def determine_shapes(parent_dir,
     
     # creating helper layer object needed for vectorizing
     # shapes and saving
-    o = helper_layers.ProcessData(train_data_od, 
-                                  20000, 
-                                  'int')
+    o = helper_layers.ProcessData(training=False,
+                                  input_data=train_data_od, 
+                                  tvec_mt=20000, 
+                                  tvec_om='int')
     
     
     train_data_od_t = tensorflow.constant(train_data_od) # tensor of strings
