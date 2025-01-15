@@ -146,6 +146,10 @@ def match_credentials(credentials) -> List[str]:
     # print(caregivers_oi)
     return caregivers_oi
 
+def sort_locations(patient_location:Tuple[float, float], 
+                   targets:List[Tuple[float, float],]) -> List[str]:
+    pass
+
 # TODO: need to delegate job_description None value to make raw predictions if no value passed
 # to the recommenders
 def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str]]:
@@ -221,7 +225,7 @@ def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str
     potential_caregivers_serv: List[str] | None = match_services(services)
     # print(potential_caregivers_cred, potential_caregivers_serv)
     # print(credentials, services)
-    overlap = []
+    potential_caregivers = []
     # print(potential_caregivers_cred)
     count = 0
     for i in (potential_caregivers_cred, 
@@ -229,14 +233,19 @@ def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str
         if i is not None:
             assert isinstance(i, list)
             for j in i:
-                if j not in overlap:
-                    overlap.append(j)
+                if j not in potential_caregivers:
+                    potential_caregivers.append(j)
         else:
             count += 1
         if count == 2:
             print('No credentials or services found!')
     
-    return overlap
+    # potential_caregivers = sort_locations(
+        # patient.care_location,
+        # potential_caregivers
+    # )
+    
+    return potential_caregivers
     
     
     # return (credentials, 
