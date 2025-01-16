@@ -6,6 +6,7 @@ from webookcare.models.dl.patients.credentials_recommendation import main as cre
 from webookcare.models.dl.patients.service_recommendation import main as service_recommender
 from webookcare.models.dl.caregivers.careservices.retrieve_services_info import check_services
 from webookcare.models.dl.caregivers.qualifications.retrieve_credentials import check_credentials
+from webookcare.models.dl.patients.location_ranking.locations import sort_locations
 from webookcare.queries_api.patient.data_models import PatientReq
 from typing import Tuple, List
 
@@ -146,9 +147,17 @@ def match_credentials(credentials) -> List[str]:
     # print(caregivers_oi)
     return caregivers_oi
 
-def sort_locations(patient_location:Tuple[float, float], 
+# TODO: finish implementing
+def rank_locations(patient_location:Tuple[float, float], 
                    targets:List[Tuple[float, float],]) -> List[str]:
-    pass
+    sorted_locations = sort_locations(patient_location, 
+                                      targets)
+    return sorted_locations
+
+# TODO: finish implementing
+# def rank_reviews(reviews:List[str]) -> List[str]:
+    # sorted_reviews = sort_reviews(reviews)
+    # return sorted_reviews
 
 # TODO: need to delegate job_description None value to make raw predictions if no value passed
 # to the recommenders
@@ -240,10 +249,14 @@ def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str
         if count == 2:
             print('No credentials or services found!')
     
-    # potential_caregivers = sort_locations(
-        # patient.care_location,
-        # potential_caregivers
-    # )
+    # TODO: finish implementing
+    potential_caregivers = rank_locations(
+        patient.care_location,
+        potential_caregivers
+    )
+    
+    # TODO: finish implementing
+    # potential_caregivers = rank_reviews(potential_caregivers)
     
     return potential_caregivers
     

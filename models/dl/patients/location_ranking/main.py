@@ -66,7 +66,16 @@ def load_model(name):
 def predict(data, model_name='location_ranking'):
     # data = tensorflow.cast(data, 
                         #    dtype=tensorflow.float32)
-    data = tuple(map(float, data.strip('()').split(', ')))
+    # gets the list of locations in form of tuples of floats
+    # if isinstance(data, list):
+        # for i in range(len(data)):
+            # data[i] = tuple(map(float, data[i]))
+    # else:
+        # data = tuple(map(float, data.strip('()').split(', ')))
+    # if isinstance(data, list):
+        # data = [tuple(map(float, i)) for i in data]
+    # else:
+        # data = tuple(map(float, data))
     data = tensorflow.constant(data)
     data = check_shape(data)
     model = load_model(model_name)
@@ -81,4 +90,19 @@ def predict(data, model_name='location_ranking'):
     else:
         predictions = model.predict(data)
     
-    predictions = predictions[0]
+    # predictions = predictions[0]
+    return predictions
+
+# predicting lat1, long1, lat2, long2
+# lat1, long1 for patient
+# lat2, long2 for caregiver
+# print(predict([52.092304, -116.34691, 53.03968 , -118.30955]))
+
+# print(predict(
+    # [[52.092304, -116.34691, 51.661026, -138.16566 ],
+    # [  52.092304, -116.34691 ,   53.03968 , -118.30955 ],
+    # [  52.092304, -116.34691 ,   52.52854 , -123.17357 ],
+    # [  52.092304, -116.34691 ,   53.51052 , -119.099106],
+    # [  52.092304, -116.34691 ,   55.41569 , -123.37369 ]]))
+    
+    
