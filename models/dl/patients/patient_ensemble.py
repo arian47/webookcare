@@ -158,9 +158,9 @@ def rank_locations(patient_location:Tuple[float, float],
 
 # TODO: finish implementing
 def rank_reviews(patient_id:int,
-                 caregivers_oi:List[str]) -> List[str]:
+                 patients_oi:List[str]) -> List[str]:
     sorted_reviews = sort_reviews(patient_id,
-                                  caregivers_oi)
+                                  patients_oi)
     sorted_reviews = [i[0] for i in sorted_reviews]
     return sorted_reviews
 
@@ -267,37 +267,6 @@ def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str
     return potential_caregivers
     
     
-    # return (credentials, 
-            # services, 
-            # potential_caregivers)
-
-
-# print(rank_caregivers(patient = PatientReq({
-        # "patient_id": 123,
-        # "job_description": "I need a registered nurse who is CPR certified. to help mom after she has been back from the hospital",
-        # "healthcare_setting": "home",
-        # "caregiver_type": "registered_nurse",
-        # "credentials": ["registered_nurse", "cpr_certified"],
-        # "care_location": (40.7128, -74.0060)})))
-
-# data = {
-#     "patient_id": 123,
-#     "job_description": """
-#     mom is very sick she is need of help from an experienced caregiver
-#     she has recently got home from ICU""",
-#     "rate": 25.5,
-#     "healthcare_setting": "Hospital",
-#     "care_location": [37.7749, -122.4194],
-#     "property_type": "Apartment",
-#     "health_condition": "Post-surgery care",
-#     "caregiver_type": "Registered Nurse",
-#     "credentials": "CPR certified",
-#     "careservices": ["Dressing wounds", "Monitoring vital signs"],
-#     "budget": 1500,
-#     "care_date": 1672531200
-# }
-# print(rank_caregivers(data))
-
 # import datetime
 # data = {
 #     "patient_id": 123,
