@@ -2,7 +2,8 @@ from tensorflow.keras.backend import clear_session
 import tensorflow
 import pathlib
 import gc
-
+import pickle
+import surprise
 
 def create_dirs(spec=None):
     if not spec:
@@ -52,3 +53,20 @@ def load(model_path):
             gc.collect()
             model = loaded_model.load(model_path)
     return loaded_model
+
+def save_ml(model, model_path, type:str='pickle'):
+    if type == 'pickle':
+        with open(model_path, 'wb') as file:
+            pickle.dump(model, file)
+    # elif type == 'surprise':
+        # surprise.dump.dump(model_path, model)
+
+
+def load_ml(model_path, type:str='pickle'):
+    if type == 'pickle':
+        with open(model_path, 'rb') as file:
+            model = pickle.load(file)
+    # elif type == 'surprise':
+        # model = surprise.dump.load(model_path)
+    return model
+    

@@ -29,7 +29,7 @@ def sort_locations(patient_location:Tuple[float, float],
     assert isinstance(care_givers, list), "care_givers must be a list of strings"
     names = [(i.split()[0].lower(), 
               i.split()[1].lower()) for i in care_givers]
-    # print(names)
+    # print(len(names))
     connection = mysql.connector.connect(
     host='localhost',
     user=DB_USERNAME,
@@ -39,6 +39,7 @@ def sort_locations(patient_location:Tuple[float, float],
     cursor = connection.cursor()
     
     locations = []
+    invalid_items = []
     for i in names:
         command = f"""
         SELECT
@@ -50,9 +51,19 @@ def sort_locations(patient_location:Tuple[float, float],
         """
         # print(command)
         cursor.execute(command)
-        caregivers = cursor.fetchall().pop()
-        locations.append(caregivers)
+        try:
+            caregivers = cursor.fetchall().pop()
+            locations.append(caregivers)
+        except IndexError:
+            # when there is a null value in the database
+            invalid_items.append(i)
+    names = [i for i in names if i not in invalid_items]
+    # print(len(names))
+    # print(len(locations))
     # print(locations)
+    invalid_indexs = [i for i in range(len(locations))if locations[i][0]==None or locations[i][1]==None]
+    names = [names[i] for i in range(len(names)) if i not in invalid_indexs]
+    locations = [locations[i] for i in range(len(locations)) if i not in invalid_indexs]
     locations = [tuple(map(float, i)) for i in locations]
     locations = [[patient_location[0], patient_location[1],
                  i[0], i[1]] for i in locations]
