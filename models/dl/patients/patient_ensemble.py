@@ -1,5 +1,4 @@
 import re
-# import typer
 import logging
 import tensorflow
 from webookcare.models.dl.patients.credentials_recommendation import main as credentials_recommender
@@ -10,8 +9,6 @@ from webookcare.models.dl.patients.location_ranking.locations import sort_locati
 from webookcare.models.dl.caregivers.reviews.reviews import sort_reviews
 from webookcare.queries_api.patient.data_models import PatientReq
 from typing import Tuple, List
-
-# app = typer.Typer()
 
 # numpy.set_printoptions(threshold=numpy.inf)
 # Set TensorFlow logging level to ERROR
@@ -135,8 +132,6 @@ def match_credentials(credentials) -> List[str]:
             # looping through caregivers info of credentials
             for j in caregivers_credentials_dict:
                 # TODO: clean up potentially wrong codes below
-                # tmp_sent = ' '.join(caregivers_credentials_dict[j])
-                # if re.findall(rf"\b{i}\b", tmp_sent, re.IGNORECASE):
                 if i in caregivers_credentials_dict[j]:
                     if j not in caregivers_oi:
                         caregivers_oi.append(j)
@@ -145,7 +140,6 @@ def match_credentials(credentials) -> List[str]:
         # in case no credentials is found
         # caregivers_oi=[None,]
         caregivers_oi=None
-    # print(caregivers_oi)
     return caregivers_oi
 
 # TODO: finish implementing
@@ -237,10 +231,7 @@ def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str
     )
     potential_caregivers_cred: List[str] | None = match_credentials(credentials)
     potential_caregivers_serv: List[str] | None = match_services(services)
-    # print(potential_caregivers_cred, potential_caregivers_serv)
-    # print(credentials, services)
     potential_caregivers = []
-    # print(potential_caregivers_cred)
     count = 0
     for i in (potential_caregivers_cred, 
               potential_caregivers_serv):
@@ -265,25 +256,3 @@ def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str
                                         potential_caregivers)
     
     return potential_caregivers
-    
-    
-# import datetime
-# data = {
-#     "patient_id": 123,
-#     "job_description": """
-#     mom is very sick she is need of help from an experienced caregiver
-#     she has recently got home from ICU as she has never been this ill
-#     and I need someone to take care of her""",
-#     "rate": 25.5,
-#     "healthcare_setting": "hospital",
-#     "care_location": [37.7749, -122.4194],
-#     "property_type": "Apartment",
-#     "health_condition": "good",
-#     "caregiver_type": "Registered Practical Nurse",
-#     "credentials": ["First Aid Level One",],
-#     "careservices": ["Medication Reminders", "Housekeeping"],
-#     "budget": 1500,
-#     "care_date": datetime.datetime.now().timestamp() + 3600
-# }
-# data = PatientReq(**data)
-# print(rank_caregivers(data))

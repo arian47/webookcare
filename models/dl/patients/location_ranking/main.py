@@ -11,7 +11,6 @@ current_dir = pathlib.Path(__file__).resolve().parent
 DEFAULT_MODEL_PATH = os.path.join(
     current_dir, 
     "saved_models/location_ranking").replace('\\', '/')
-# app = typer.Typer()
 
 numpy.set_printoptions(threshold=numpy.inf)
 # Set TensorFlow logging level to ERROR
@@ -19,7 +18,6 @@ tensorflow.get_logger().setLevel('ERROR')
 # Suppress warnings from the Python logging module
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
 
-# @app.command()
 def check_shape(input_):
     """
     Ensures that the input tensor has at least two dimensions. If the input tensor
@@ -42,7 +40,6 @@ def check_shape(input_):
         pass
     return input_
 
-# @app.command()
 def load_model(name):
     """
     Loads a pre-trained model from disk. If loading fails due to resource exhaustion or internal error,
@@ -62,20 +59,7 @@ def load_model(name):
             model = save_models.load(DEFAULT_MODEL_PATH)
     return model
 
-# @app.command()
 def predict(data, model_name='location_ranking'):
-    # data = tensorflow.cast(data, 
-                        #    dtype=tensorflow.float32)
-    # gets the list of locations in form of tuples of floats
-    # if isinstance(data, list):
-        # for i in range(len(data)):
-            # data[i] = tuple(map(float, data[i]))
-    # else:
-        # data = tuple(map(float, data.strip('()').split(', ')))
-    # if isinstance(data, list):
-        # data = [tuple(map(float, i)) for i in data]
-    # else:
-        # data = tuple(map(float, data))
     data = tensorflow.constant(data)
     data = check_shape(data)
     model = load_model(model_name)
@@ -97,12 +81,5 @@ def predict(data, model_name='location_ranking'):
 # lat1, long1 for patient
 # lat2, long2 for caregiver
 # print(predict([52.092304, -116.34691, 53.03968 , -118.30955]))
-
-# print(predict(
-    # [[52.092304, -116.34691, 51.661026, -138.16566 ],
-    # [  52.092304, -116.34691 ,   53.03968 , -118.30955 ],
-    # [  52.092304, -116.34691 ,   52.52854 , -123.17357 ],
-    # [  52.092304, -116.34691 ,   53.51052 , -119.099106],
-    # [  52.092304, -116.34691 ,   55.41569 , -123.37369 ]]))
     
     
