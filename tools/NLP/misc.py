@@ -10,103 +10,102 @@ import webookcare.models
 
 # TODO: need to differentiate between the way determine_shapes works 
 # on the new and seen data
-def determine_shapes(parent_dir,
-                     save_req=False,
-                     data_file_path="paraphrased_sentences.npy", 
-                     labels_file_path="augmented_labels.npy",
-                     num_ngrams=1):
-    """
-    Determines and returns the shapes of the train data and label vocabularies after 
-    processing steps such as cleaning, n-gram creation, padding, and multi-hot encoding.
+# def determine_shapes(parent_dir,
+#                      save_req=False,
+#                      data_file_path="paraphrased_sentences.npy", 
+#                      labels_file_path="augmented_labels.npy",
+#                      num_ngrams=1):
+#     """
+#     Determines and returns the shapes of the train data and label vocabularies after 
+#     processing steps such as cleaning, n-gram creation, padding, and multi-hot encoding.
 
-    This function performs the following steps:
-    1. Loads and preprocesses paraphrased sentences and augmented labels.
-    2. Cleans data and removes invalid entries (e.g., non-UTF8 characters, Nones).
-    3. Generates bigrams for the labels and vocabularies.
-    4. Pads and encodes the bigrams using multi-hot encoding.
-    5. Vectorizes the training data using a helper layer and returns the final shapes.
+#     This function performs the following steps:
+#     1. Loads and preprocesses paraphrased sentences and augmented labels.
+#     2. Cleans data and removes invalid entries (e.g., non-UTF8 characters, Nones).
+#     3. Generates bigrams for the labels and vocabularies.
+#     4. Pads and encodes the bigrams using multi-hot encoding.
+#     5. Vectorizes the training data using a helper layer and returns the final shapes.
 
-    Parameters
-    ----------
-    save_req : bool, optional
-        If True, saves the vocabulary for labels and training data to disk. Default is False.
+#     Parameters
+#     ----------
+#     save_req : bool, optional
+#         If True, saves the vocabulary for labels and training data to disk. Default is False.
 
-    Returns
-    -------
-    tuple
-        A tuple containing the shapes of the unique items in training data and the label vocabulary items.
-    """
-    # sentences that were paraphrased and saved before
-    data_file_path=parent_dir.joinpath(data_file_path)
-    data = numpy.load(data_file_path).flatten().tolist()
-    # labels that were augmented and saved before 
-    labels_file_path=parent_dir.joinpath(labels_file_path)
-    labels = numpy.load(labels_file_path, 
-                        allow_pickle=True).flatten().tolist()
-    # initializing pre and post processing objs
-    preo = Preprocess()
-    pp = PostProcess()
-    # removing special character, nones, non-utf8 chars, 
-    train_labels_od = preo.remove_special_chars(labels)
+#     Returns
+#     -------
+#     tuple
+#         A tuple containing the shapes of the unique items in training data and the label vocabulary items.
+#     """
+#     # sentences that were paraphrased and saved before
+#     data_file_path=parent_dir.joinpath(data_file_path)
+#     data = numpy.load(data_file_path).flatten().tolist()
+#     # labels that were augmented and saved before 
+#     labels_file_path=parent_dir.joinpath(labels_file_path)
+#     labels = numpy.load(labels_file_path, 
+#                         allow_pickle=True).flatten().tolist()
+#     # initializing pre and post processing objs
+#     preo = Preprocess()
+#     pp = PostProcess()
+#     # removing special character, nones, non-utf8 chars, 
+#     train_labels_od = preo.remove_special_chars(labels)
 
-    train_data_od, train_labels_od = pp.remove_nones(
-        data, 
-        train_labels_od
-    )
-    # same number of train data and labels
-    assert len(train_data_od) == len(train_labels_od)
+#     train_data_od, train_labels_od = pp.remove_nones(
+#         data, 
+#         train_labels_od
+#     )
+#     # same number of train data and labels
+#     assert len(train_data_od) == len(train_labels_od)
     
-    train_data_od = preo.clean_non_utf8(train_data_od)
-    train_labels_od = preo.clean_non_utf8(train_labels_od)
+#     train_data_od = preo.clean_non_utf8(train_data_od)
+#     train_labels_od = preo.clean_non_utf8(train_labels_od)
 
-    # TODO: below line might not be true in all the cases
-    train_labels_od = [[' '.join(i for i in j)] for j in train_labels_od]
+#     # TODO: below line might not be true in all the cases
+#     train_labels_od = [[' '.join(i for i in j)] for j in train_labels_od]
     
-    # creating bigrams for labels and vocab
-    (train_labels_od_ng_vocab,
-     train_labels_od_ngrams) = pp.create_ngrams(
-         train_labels_od, 
-         num_ngrams
-         )
+#     # creating n-grams for labels and vocab
+#     (train_labels_od_ng_vocab,
+#      train_labels_od_ngrams) = pp.create_ngrams(
+#          train_labels_od, 
+#          num_ngrams
+#          )
 
-    # padding bigram labels, vocab including <pad> keyword as well
-    (train_labels_od_ngrams_padded,
-     train_labels_od_ng_vocab_padded) = pp.pad_ngrams(
-         train_labels_od_ngrams,
-        train_labels_od_ng_vocab
-        )
+#     # padding n-grams labels, vocab including <pad> keyword as well
+#     (train_labels_od_ngrams_padded,
+#      train_labels_od_ng_vocab_padded) = pp.pad_ngrams(
+#          train_labels_od_ngrams,
+#          train_labels_od_ng_vocab
+#         )
     
-    # multihot encoded bigram labels, adding <unk> keyword to the vocab that included <pad> keyword
-    (train_labels_od_ngrams_padded_mh,
-     train_labels_od_ngrams_padded_mh_vocab) = pp.multihot_encode(
-         train_labels_od_ngrams_padded,
-         train_labels_od_ng_vocab_padded
-         )
-    assert len(train_data_od) == len(train_labels_od)
+#     # multihot encoded n-grams labels, adding <unk> keyword to the vocab that included <pad> keyword
+#     (train_labels_od_ngrams_padded_mh,
+#      train_labels_od_ngrams_padded_mh_vocab) = pp.multihot_encode(
+#          train_labels_od_ngrams_padded,
+#          train_labels_od_ng_vocab_padded
+#          )
+#     assert len(train_data_od) == len(train_labels_od)
     
-    # creating helper layer object needed for vectorizing
-    # shapes and saving
-    o = helper_layers.ProcessData(training=False,
-                                  input_data=train_data_od, 
-                                  tvec_mt=20000, 
-                                  tvec_om='int')
+#     # creating helper layer object needed for vectorizing
+#     # shapes and saving
+#     o = helper_layers.ProcessData(training=False,
+#                                   input_data=train_data_od, 
+#                                   tvec_mt=20000, 
+#                                   tvec_om='int')
     
+#     train_data_od_t = tensorflow.constant(train_data_od) # tensor of strings
+#     train_data_od_t = o.tvec(train_data_od_t)
     
-    train_data_od_t = tensorflow.constant(train_data_od) # tensor of strings
-    train_data_od_t = o.tvec(train_data_od_t)
-    
-    if save_req:
-        # saving the vocabulary for labels
-        numpy.save("mh_labels_vocab.npy", # multi-hot encoded labels vocabulary includes <pad> and <unk> tokens
-                   train_labels_od_ngrams_padded_mh_vocab)
+#     if save_req:
+#         # saving the vocabulary for labels
+#         numpy.save("mh_labels_vocab.npy", # multi-hot encoded labels vocabulary includes <pad> and <unk> tokens
+#                    train_labels_od_ngrams_padded_mh_vocab)
         
-        # saving the vocabulary for train data
-        train_data_int_1g_vocab_path = pathlib.Path('train_data_int_1g_vocab')
-        numpy.save(train_data_int_1g_vocab_path,
-                   o.tvec.get_vocabulary())
-    NUM_LABELS_VOCAB_ITEMS = train_labels_od_ngrams_padded_mh.shape[-1]
-    NUM_UNIQUE_ITEMS = train_data_od_t.shape[-1]
-    return NUM_UNIQUE_ITEMS, NUM_LABELS_VOCAB_ITEMS
+#         # saving the vocabulary for train data
+#         train_data_int_1g_vocab_path = pathlib.Path('train_data_int_1g_vocab')
+#         numpy.save(train_data_int_1g_vocab_path,
+#                    o.tvec.get_vocabulary())
+#     NUM_LABELS_VOCAB_ITEMS = train_labels_od_ngrams_padded_mh.shape[-1]
+#     NUM_UNIQUE_ITEMS = train_data_od_t.shape[-1]
+#     return NUM_UNIQUE_ITEMS, NUM_LABELS_VOCAB_ITEMS
 
 # def load_model():
 #     """
@@ -129,6 +128,7 @@ def determine_shapes(parent_dir,
 
 
 def train(parent_dir,
+          training=True,
           data_file_path="paraphrased_sentences.npy", 
           labels_file_path="augmented_labels.npy", 
           epochs=10, 
@@ -175,6 +175,9 @@ def train(parent_dir,
         train_labels_od
     )
 
+    # same number of train data and labels
+    assert len(train_data_od) == len(train_labels_od)
+
     train_data_od = preo.clean_non_utf8(train_data_od)
     train_labels_od = preo.clean_non_utf8(train_labels_od)
     
@@ -210,47 +213,64 @@ def train(parent_dir,
     #     vocab=vocab,
     #     pad_to_max_tokens=True, 
     #     output_sequence_length=NUM_UNIQUE_ITEMS)
-    o = helper_layers.ProcessData(train_data_od, 20000, 'int')
-    train_data_od_t = tensorflow.constant(train_data_od) # tensor of strings
+    
+    # tensor of strings
+    train_data_od_t = tensorflow.constant(train_data_od)
+    if training:
+        o = helper_layers.ProcessData(training=True,
+                                      input_data=train_data_od, 
+                                      tvec_mt=20000, 
+                                      tvec_om='int')
+    else:
+        o = helper_layers.ProcessData(training=False,
+                                      input_data=train_data_od, 
+                                      tvec_mt=20000, 
+                                      tvec_om='int')
+     
     train_data_od_t = o.tvec(train_data_od_t)
     
     if save_files:
         numpy.save(parent_dir.joinpath("mh_labels_vocab.npy"),
                    train_labels_od_ngrams_padded_mh_vocab)
         train_data_int_1g_vocab_path = \
-            parent_dir.joinpath(pathlib.Path('train_data_int_1g_vocab'))
+            parent_dir.joinpath(pathlib.Path(f'train_data_int_{num_ngrams}g_vocab'))
         numpy.save(train_data_int_1g_vocab_path,
             o.tvec.get_vocabulary())
     
-    model = webookcare.models.MLP('MLP', 
-                              dense_units=[
-                                  8192, 
-                                  4096, 
-                                  train_labels_od_ngrams_padded_mh.shape[-1],
-                                  ]
-                              )
-    model.compile()
-    history = model.fit(x=train_data_od_t,
-                        y=train_labels_od_ngrams_padded_mh,
-                        validation_split=0.3,
-                        epochs=epochs,
-                        batch_size=batch_size)
-    
-    # data_txt = o.tvec(data)
-    # labels_txt = o.tvec(labels)
-    
-    # loading the model
-    # model = save_models.load(DEFAULT_MODEL_PATH)
-    
-    # training the model
-    # model.fit(data_txt, labels_txt, epochs=epochs, batch_size=batch_size)
-    
-    # saving the model
-    save_models.save(model,
-                     'MLP_int_1g_unigram_multihot_labels',
-                     'default')
-    
-    return model_path
+    if training:
+        model = webookcare.models.MLP('MLP', 
+                                      dense_units=[
+                                          8192, 
+                                          4096, 
+                                          train_labels_od_ngrams_padded_mh.shape[-1],
+                                          ]
+                                      )
+        model.compile()
+        history = model.fit(x=train_data_od_t,
+                            y=train_labels_od_ngrams_padded_mh,
+                            validation_split=0.3,
+                            epochs=epochs,
+                            batch_size=batch_size)
+        
+        # data_txt = o.tvec(data)
+        # labels_txt = o.tvec(labels)
+        
+        # loading the model
+        # model = save_models.load(DEFAULT_MODEL_PATH)
+        
+        # training the model
+        # model.fit(data_txt, labels_txt, epochs=epochs, batch_size=batch_size)
+        
+        # saving the model
+        save_models.save(model,
+                         f'MLP_int_{num_ngrams}g_unigram_multihot_labels',
+                         'default')
+        
+        return model_path
+    else:
+        NUM_LABELS_VOCAB_ITEMS = train_labels_od_ngrams_padded_mh.shape[-1]
+        NUM_UNIQUE_ITEMS = train_data_od_t.shape[-1]
+        return NUM_UNIQUE_ITEMS, NUM_LABELS_VOCAB_ITEMS
 
 
 def predict(data,

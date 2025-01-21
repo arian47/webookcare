@@ -10,6 +10,8 @@ CAREGIVERS_AND_SERVICES_CSV_PATH = 'caregivers_and_services.csv'
 CAREGIVERS_AND_SERVICES_NPY_PATH = 'caregivers_and_services.npy'
 DB_USERNAME = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("DB_NAME")
+DB_HOST = os.getenv("DB_HOST")
 
 # TODO: transferring save and retrieval of info to a different module.
 def save_services(caregivers_and_services):
@@ -49,11 +51,11 @@ def check_services(save:bool=False):
         in the form of `{caregiver_name: [care_service_name, ...]}`.
     """
     connection = mysql.connector.connect(
-    host='localhost',
-    user=DB_USERNAME,
-    password=DB_PASSWORD,
-    database='test'
-    )
+        host=DB_HOST,
+        user=DB_USERNAME,
+        password=DB_PASSWORD,
+        database=DB_NAME
+        )
     cursor = connection.cursor()
     
     command = f"""

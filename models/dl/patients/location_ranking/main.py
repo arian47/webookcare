@@ -54,7 +54,7 @@ def load_model(name):
         model = save_models.load(DEFAULT_MODEL_PATH)
     except tensorflow.errors.ResourceExhaustedError or \
         tensorflow.errors.InternalError:
-            tensorflow.keras.backend.clear_session()
+            clear_session()
             gc.collect()
             model = save_models.load(DEFAULT_MODEL_PATH)
     return model

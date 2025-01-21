@@ -9,7 +9,8 @@ load_dotenv()
 
 DB_USERNAME = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
-
+DB_NAME = os.getenv("DB_NAME")
+DB_HOST = os.getenv("DB_HOST")
 HCW_REVIEWS_PATH = 'hcw_reviews.csv'
 HCW_REVIEWS_NPY_PATH = 'hcw_reviews.npy'
 DEFAULT_MODEL_PATH = 'svd_model.pkl'
@@ -33,11 +34,11 @@ def sort_reviews(patient_id:int,
                  caregivers_oi:List[str]):
     
     connection = mysql.connector.connect(
-    host='localhost',
-    user=DB_USERNAME,
-    password=DB_PASSWORD,
-    database='test'
-    )
+        host=DB_HOST,
+        user=DB_USERNAME,
+        password=DB_PASSWORD,
+        database=DB_NAME
+        )
     cursor = connection.cursor()
     caregivers_reviews = []
     for i in caregivers_oi:

@@ -8,7 +8,8 @@ load_dotenv()
 
 DB_USERNAME = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
-
+DB_NAME = os.getenv("DB_NAME")
+DB_HOST = os.getenv("DB_HOST")
 def sort_locations(patient_location:Tuple[float, float],
                    care_givers:List[str]):
     """
@@ -30,11 +31,11 @@ def sort_locations(patient_location:Tuple[float, float],
     names = [(i.split()[0].lower(), 
               i.split()[1].lower()) for i in care_givers]
     connection = mysql.connector.connect(
-    host='localhost',
-    user=DB_USERNAME,
-    password=DB_PASSWORD,
-    database='test'
-    )
+        host=DB_HOST,
+        user=DB_USERNAME,
+        password=DB_PASSWORD,
+        database=DB_NAME
+        )
     cursor = connection.cursor()
     
     locations = []

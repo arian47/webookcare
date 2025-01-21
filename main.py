@@ -2,7 +2,9 @@ from fastapi import FastAPI
 import webookcare
 import json
 from webookcare.models.dl.patients.patient_ensemble import rank_caregivers
+from webookcare.models.dl.caregivers.caregiver_ensemble import find_jobs
 from webookcare.queries_api.patient.data_models import PatientReq
+from webookcare.queries_api.caregiver.data_models import CareGiverReq
 
 #TODO: implementation of data model structure for CareGiver
 # from webookcare.queries_api.caregiver.data_models import CareGiver
@@ -46,6 +48,25 @@ async def get_candidates(patient: PatientReq):
     # test case
     # return {"message": "Patient data received successfully.", 
             # "data": patient.dict()}
+
+@app.post("/caregivers/")
+async def get_candidates(caregiver: CareGiverReq):
+    caregiver_dict = caregiver.dict()
+    # caregivers_oi = rank_caregivers(caregiver)
+    
+    # response = dict(
+        # credentials=credentials,
+        # services=services,
+        # potential_caregivers=potential_caregivers
+    # )
+    # return json.dumps(response)
+    # return response
+    # return caregivers_oi
+    
+    # test case
+    # return {"message": "Patient data received successfully.", 
+            # "data": patient.dict()}
+
 
 
 if __name__ == "__main__":

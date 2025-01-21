@@ -11,6 +11,8 @@ CAREGIVERS_CREDENTIALS_CSV_PATH = 'caregivers_qualifications.csv'
 CAREGIVERS_CREDENTIALS_NPY_PATH = 'caregivers_qualifications.npy'
 DB_USERNAME = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("DB_NAME")
+DB_HOST = os.getenv("DB_HOST")
 
 # TODO: transferring save and retrieval of info to a different module.
 def save_credentials(caregivers_credentials):
@@ -51,11 +53,11 @@ def check_credentials(save:bool=False):
         in the form of `{caregiver_name: [credentials_name, ...]}`.
     """
     connection = mysql.connector.connect(
-    host='localhost',
-    user=DB_USERNAME,
-    password=DB_PASSWORD,
-    database='test'
-    )
+        host=DB_HOST,
+        user=DB_USERNAME,
+        password=DB_PASSWORD,
+        database=DB_NAME
+        )
     cursor = connection.cursor()
     
     command = f"""
