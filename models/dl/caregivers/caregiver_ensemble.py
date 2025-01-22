@@ -8,18 +8,16 @@ import mysql.connector
 import re
 import logging
 import tensorflow
-# from webookcare.models.dl.patients.credentials_recommendation import main as credentials_recommender
-# from webookcare.models.dl.patients.service_recommendation import main as service_recommender
+import json
+import random
+from webookcare.models.dl.patients.credentials_recommendation import main as credentials_recommender
+from webookcare.models.dl.patients.service_recommendation import main as service_recommender
 # from webookcare.models.dl.caregivers.careservices.retrieve_services_info import check_services
 # from webookcare.models.dl.caregivers.qualifications.retrieve_credentials import check_credentials
 # from webookcare.models.dl.patients.location_ranking.locations import sort_locations
 # from webookcare.queries_api.patient.data_models import PatientReq
-from webookcare.queries_api.caregiver.data_models import CareGiverReq
-from webookcare.models.dl.patients.credentials_recommendation import main as credentials_recommender
-from webookcare.tools.NLP.misc import (
-    determine_shapes,
-    predict
-)
+# from webookcare.queries_api.caregiver.data_models import CareGiverReq
+# from webookcare.models.dl.patients.credentials_recommendation import main as credentials_recommender
 from typing import Tuple, List
 
 load_dotenv()
@@ -37,103 +35,117 @@ tensorflow.get_logger().setLevel('ERROR')
 # Suppress warnings from the Python logging module
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
 
-
-def find_jobs(database_state:bool=False):
-    # TODO: to be implemented later
-    if database_state:
+# matching the services requested with care givers services
+def get_services(caregiver_id) -> List[str]:
+    try:
         connection = mysql.connector.connect(
-        host=DB_HOST,
-        user=DB_USERNAME,
-        password=DB_PASSWORD,
-        database=DB_NAME
+            host=DB_HOST,
+            user=DB_USERNAME,
+            password=DB_PASSWORD,
+            database=DB_NAME
         )
         cursor = connection.cursor()
+    
         command = f"""
+        SELECT 
+            care_services.id, 
+            care_services.name
+        FROM care_services;
+        """
+        cursor.execute(command)
+        care_services = cursor.fetchall()
+        
+        command = f"""
+        SELECT 
+            care_service_caregiver.caregiver_id, 
+            care_service_caregiver.care_service_id
+        FROM care_service_caregiver
+        WHERE care_service_caregiver.caregiver_id = {caregiver_id};
+        """
+        cursor.execute(command)
+        caregiver_services = cursor.fetchall()
+        
+        services = []
+        for i in caregiver_services:
+            for j in care_services:
+                if i[1] == j[0]:
+                    services.append(j[1])
+        return services
+        
+    finally:
+        cursor.close()
+        connection.close()
+
+# def find_jobs(database_state:bool=False):
+def find_jobs(caregiver_id, 
+              credentials=None, 
+              services=None):
+    potential_jobs = []
+    # TODO: to be implemented later
+    # if database_state:
+    try:
+        connection = mysql.connector.connect(
+            host=DB_HOST,
+            user=DB_USERNAME,
+            password=DB_PASSWORD,
+            database=DB_NAME
+        )
+        cursor = connection.cursor(dictionary=True)  # Enables DictCursor
+        command = """
         SELECT
-            job.patient_id,
-            jobs.job_description
+            jobs.job_id,
+            jobs.patient_id,
+            jobs.job_description,
+            jobs.credentials,
+            jobs.services
         FROM jobs;
         """
         cursor.execute(command)
-        jobs = cursor.fetchall()
-    else:
-        # TODO: determine if retrain options needs to be added
-        # TODO: create ngrams based on labels available and do
-        # predictions based on that to retrieve list of credentials
-        # and services
-        determine_shapes(credentials_recommender.current_dir,
-                         save_req=False,
-                         data_file_path=credentials_recommender.DATA_FILE_PATH,
-                         labels_file_path=credentials_recommender.LABELS_FILE_PATH,
-                         num_ngrams=credentials_recommender.NUM_NGRAMS)
-        
-
-# # matching the services requested with care givers services
-# def match_services(service) -> List[str]:
-#     """
-#     Gives back the dictionary of caregivers and the services they offer.
-
-#     This function takes a requested service and compares it against a dictionary
-#     of available caregiver services to find matching caregivers.
-
-#     Args:
-#         service: The requested care service to match against available caregiver services.
-#                 Expected to be a CareServices enum value (e.g., CareServices.WOUND_CARE).
-
-#     Returns:
-#         list: A list of matching caregivers based on the requested service:
-#             [
-#                 'caregiver_id_1',
-#                 'caregiver_id_2',
-#                 ...
-#             ]
-
-#     Raises:
-#         ValueError: If the service parameter is not a valid CareServices enum value
-#         KeyError: If the service is not found in the available services
-
-#     Example:
-#         >>> available_matches = match_services(CareServices.WOUND_CARE)
-#         >>> print(available_matches)
-#         [
-#             'caregiver_1',
-#             'caregiver_2',
-#         ]
-
-#     Note:
-#         The check_services() function is called internally to get the current
-#         dictionary of available caregiver services.
-#     """
-#     caregivers_services_dict = check_services()
+        jobs = cursor.fetchall()  # Each row is now a dictionary
+        for job in jobs:
+            job['credentials'] = json.loads(job['credentials'])
+            job['services'] = json.loads(job['services'])
+        # return jobs  # Directly returns a list of dictionaries
+    finally:
+        cursor.close()
+        connection.close()
     
-#     # TODO: can add a logging method to detect if no services are passed in
-#     # TODO: can set a threshold for specific number of services offered by the caregiver for matching
-#     # even if one of the services is offered by the caregiver suggest them
-#     # list of bigram services required passed in
-#     if service:
-#         caregivers_oi = []
-#         # looping through the list of bigram services
-#         for i in service:
-#             # splitting the bigram into words
-#             tmp_serv = i.split()
-#             # for each word
-#             for x in tmp_serv:
-#                 # looping through caregivers info of services
-#                 for y in caregivers_services_dict:
-#                     for z in y:
-#                         tmp_sent = ' '.join(y[z])
-#                         if re.findall(rf"\b{x}\b", tmp_sent, re.IGNORECASE):
-#                             if z not in caregivers_oi:
-#                                 caregivers_oi.append(z)
-#     else:
-#         # raise Exception('Service list is empty!')
-#         # in case no service is found
-#         # caregivers_oi=[None,]
-#         caregivers_oi=None
-#     # print(caregivers_oi)
-#     return caregivers_oi
+    services = get_services(caregiver_id)
+    jobs_of_interest = []
+    all_jobs = [random.choice(jobs) for i in range(20)]
+    all_jobs = [(i['job_id'],
+                 i['job_description'],
+                 service_recommender.predict_data(i['job_description']),
+                 credentials_recommender.predict_data(i['job_description'])) \
+                     for i in all_jobs]
+    
+    # TODO: could be used as backup for services:
+    # # list of bigram services required passed in
+        # looping through the list of bigram services
+    # for i in jobs:
+        # tmp_sent = ' '.join(i['services'])
+        # for z in services:
+            # print(z)
+            # # splitting the bigram into words
+            # tmp_serv = z.split()
+            # # for each word
+            # for x in tmp_serv:
+                # if re.findall(rf"\b{x}\b", tmp_sent, re.IGNORECASE):
+                    # if i['job_id'] not in jobs_of_interest:
+                        # jobs_of_interest.append(i['job_id'])
+    
+    
+    for i in all_jobs:
+        if i[2]:
+            tmp_sent = ' '.join(i[2])
+            for j in services:
+                if re.findall(rf"\b{j}\b", tmp_sent, re.IGNORECASE):
+                    if i[0] not in jobs_of_interest:
+                        jobs_of_interest.append(i[0])
+    return jobs_of_interest
+    
 
-# # matching the services requested with care givers services
+
 # def match_credentials(credentials) -> List[str]:
 #     """
 #     Gives back the list of caregivers of interest.
@@ -201,56 +213,8 @@ def find_jobs(database_state:bool=False):
 #     sorted_locations = [i[0] for i in sorted_locations]
 #     return sorted_locations
 
-# # TODO: finish implementing
-# def rank_reviews(patient_id:int,
-#                  patients_oi:List[str]) -> List[str]:
-#     sorted_reviews = sort_reviews(patient_id,
-#                                   patients_oi)
-#     sorted_reviews = [i[0] for i in sorted_reviews]
-#     return sorted_reviews
 
-# # TODO: need to delegate job_description None value to make raw predictions if no value passed
-# # to the recommenders
-# def rank_caregivers(patient: PatientReq) -> Tuple[List[str], List[str], List[str]]:
-#     """
-#     Ranks caregivers based on patient requirements defined in the Patient model.
-
-#     This function evaluates and ranks caregivers based on the criteria specified
-#     in the Patient model, including qualifications, availability, location, and 
-#     care requirements. The validation of inputs is handled automatically by the
-#     Pydantic model.
-
-#     Args:
-#         patient (Patient): A validated Patient model instance containing all
-#             patient requirements and preferences.
-
-#     Returns:
-#         Tuple[List[str], List[str], List[str]]: A tuple containing three lists:
-#             - credentials: Caregiver IDs that perfectly match all criteria
-#             - services: Caregiver IDs that match most important criteria
-#             - potential_caregivers: Caregiver IDs that match some criteria
-
-#     Raises:
-#         ValueError: If patient model validation fails
-#         TypeError: If input is not a Patient model instance
-
-#     Example:
-#         >>> patient_data = {
-#         ...     "patient_id": 123,
-#         ...     "healthcare_setting": "home",
-#         ...     "caregiver_type": "registered_nurse",
-#         ...     "credentials": ["registered_nurse", "cpr_certified"],
-#         ...     "care_location": (40.7128, -74.0060)
-#         ... }
-#         >>> patient = Patient(**patient_data)
-#         >>> credentials, services, potential_caregivers = rank_caregivers(patient)
-#         >>> print(potential_caregivers[:3])  # Print top 3 perfect matches
-#         ['caregiver_789', 'caregiver_456', 'caregiver_123']
-#     """
-#     # Type validation
-#     # if not isinstance(patient, PatientReq):
-#         # raise TypeError("Input must be an instance of Patient model")
-
+# def rank_patients(caregiver: caregiverReq) -> Tuple[List[str], List[str], List[str]]:
 #     # Extract validated data from the Patient model
 #     criteria = {
 #         'patient_id': patient.patient_id,
@@ -266,14 +230,6 @@ def find_jobs(database_state:bool=False):
 #         'care_date': patient.care_date,
 #         'care_location': patient.care_location
 #     }
-
-#     # TODO: Implement the actual ranking logic here
-#     # This would involve:
-#     # 1. Querying available caregivers
-#     # 2. Matching against criteria
-#     # 3. Scoring and ranking
-#     # 4. Sorting into appropriate match categories
-#     # potential_caregivers = []
 #     credentials: List[str] = credentials_recommender.predict_data(
 #         criteria['job_description']
 #     )

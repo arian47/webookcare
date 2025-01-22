@@ -1,8 +1,9 @@
 import os
 import pathlib
-from webookcare.tools.NLP.misc import (train, 
-                                       predict, 
-                                       determine_shapes)
+from webookcare.tools.NLP.misc import (
+    train, 
+    predict,
+    )
 
 DATA_FILE_PATH = "paraphrased_sentences.npy"
 LABELS_FILE_PATH = "augmented_labels.npy"

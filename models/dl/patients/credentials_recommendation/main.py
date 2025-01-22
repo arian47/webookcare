@@ -2,8 +2,7 @@ import pathlib
 import os
 from webookcare.tools.NLP.misc import (
     train, 
-    predict, 
-    determine_shapes
+    predict,
     )
 
 current_dir = pathlib.Path(__file__).resolve().parent
