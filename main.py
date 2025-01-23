@@ -2,7 +2,7 @@ from fastapi import FastAPI
 import webookcare
 import json
 from webookcare.models.dl.patients.patient_ensemble import rank_caregivers
-from webookcare.models.dl.caregivers.caregiver_ensemble import find_jobs
+from webookcare.models.dl.caregivers.caregiver_ensemble import rank_patients
 from webookcare.queries_api.patient.data_models import PatientReq
 from webookcare.queries_api.caregiver.data_models import CareGiverReq
 
@@ -19,7 +19,7 @@ app = FastAPI()
 
 @app.post("/patients/")
 async def get_candidates(patient: PatientReq):
-    patient_dict = patient.dict()
+    # patient_dict = patient.dict()
     # caregivers_oi = rank_caregivers(
     # patient_id = patient_dict.get('patient_id'),
     # job_description = patient_dict.get('job_description'),
@@ -51,7 +51,8 @@ async def get_candidates(patient: PatientReq):
 
 @app.post("/caregivers/")
 async def get_candidates(caregiver: CareGiverReq):
-    caregiver_dict = caregiver.dict()
+    # caregiver_dict = caregiver.dict()
+    job_ids = rank_patients(caregiver)
     # caregivers_oi = rank_caregivers(caregiver)
     
     # response = dict(
@@ -66,6 +67,7 @@ async def get_candidates(caregiver: CareGiverReq):
     # test case
     # return {"message": "Patient data received successfully.", 
             # "data": patient.dict()}
+    return job_ids
 
 
 

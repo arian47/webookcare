@@ -129,8 +129,9 @@ def check_credentials(caregiver_id:int=None,
                     res = re.sub(r"_", "", i)
                     ntmp.append(res)
                 tmp_dict[j] = ntmp
-                
-    tmp_dict.pop(None)
+    
+    if None in tmp_dict:
+        tmp_dict.pop(None)
     return tmp_dict
 
                     
