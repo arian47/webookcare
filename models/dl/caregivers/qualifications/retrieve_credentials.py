@@ -31,7 +31,8 @@ def load_services():
 
 # checking the services offered by all the caregivers which could be time consuming.
 # TODO: to break down for better filtering on needs
-def check_credentials(save:bool=False):
+def check_credentials(caregiver_id:int=None,
+                      save:bool=False):
     """
     Fetches and associates caregivers with their corresponding care 
     credentials and qualifications.
@@ -60,13 +61,23 @@ def check_credentials(save:bool=False):
         )
     cursor = connection.cursor()
     
-    command = f"""
-    SELECT 
-        caregivers.id, 
-        caregivers.first_name,
-        caregivers.last_name
-    FROM caregivers;
-    """
+    if not caregiver_id:
+        command = f"""
+        SELECT 
+            caregivers.id, 
+            caregivers.first_name,
+            caregivers.last_name
+        FROM caregivers;
+        """
+    else:
+        command = f"""
+        SELECT 
+            caregivers.id, 
+            caregivers.first_name,
+            caregivers.last_name
+        FROM caregivers
+        WHERE caregivers.id = {caregiver_id};
+        """
     cursor.execute(command)
     caregivers = cursor.fetchall()
     
@@ -95,7 +106,7 @@ def check_credentials(save:bool=False):
     for i in qualifications:
         tmp = []
         for j in range(1, val_len):
-            if i[j] in (0 , 1):
+            if i[j] in (0, 1):
                 tmp.append(bool(i[j]))
             else:
                 tmp.append(i[j])
@@ -119,7 +130,7 @@ def check_credentials(save:bool=False):
                     ntmp.append(res)
                 tmp_dict[j] = ntmp
                 
-    
+    tmp_dict.pop(None)
     return tmp_dict
 
                     

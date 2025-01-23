@@ -113,7 +113,7 @@ class CareGiverReq(BaseModel):
             raise ValueError("At least one care service must be specified")
         return v
 
-    @validator('care_location')
+    @validator('caregiver_location')
     def validate_coordinates(cls, v):
         """
         Validates that the provided coordinates are within valid ranges.
@@ -133,7 +133,7 @@ class CareGiverReq(BaseModel):
                 raise ValueError("Invalid coordinates: latitude must be between -90 and 90, longitude between -180 and 180")
         return v
     
-    @validator('care_date')
+    @validator('care_dates')
     def validate_date(cls, v):
         """
         Validates that the care date is not in the past.
@@ -162,9 +162,9 @@ class CareGiverReq(BaseModel):
             str: Formatted date string in "YYYY-MM-DD HH:MM:SS" format,
                  or None if no date is set
         """
-        if self.care_date is None:
+        if self.care_dates is None:
             return None
-        return datetime.fromtimestamp(self.care_date).strftime("%Y-%m-%d %H:%M:%S")
+        return datetime.fromtimestamp(self.care_dates).strftime("%Y-%m-%d %H:%M:%S")
 
     class Config:
         validate_assignment = True
