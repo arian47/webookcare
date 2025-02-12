@@ -29,5 +29,6 @@ setup(
         'scikit-surprise==1.1.4',
         'fastapi==0.110.1',
         'Faker==25.3.0',
+        'mysql-connector-python==9.0.0',
     ]
 )
