@@ -1,8 +1,8 @@
 import numpy
-import mysql.connector
 import csv
 import os
 import re
+import mysql.connector
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,20 +14,20 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 DB_HOST = os.getenv("DB_HOST")
 
-# TODO: transferring save and retrieval of info to a different module.
-def save_credentials(caregivers_credentials):
-    tmp = [(j, i.get(j)) for i in caregivers_credentials for j in i]
+# # TODO: transferring save and retrieval of info to a different module.
+# def save_credentials(caregivers_credentials):
+#     tmp = [(j, i.get(j)) for i in caregivers_credentials for j in i]
 
-    with open(CAREGIVERS_CREDENTIALS_CSV_PATH, mode='w', newline='') as fo:
-        writer = csv.writer(fo)
-        writer.writerows(tmp)
+#     with open(CAREGIVERS_CREDENTIALS_CSV_PATH, mode='w', newline='') as fo:
+#         writer = csv.writer(fo)
+#         writer.writerows(tmp)
 
-    numpy.save(CAREGIVERS_CREDENTIALS_NPY_PATH, 
-               numpy.array(caregivers_credentials, dtype=object))
+#     numpy.save(CAREGIVERS_CREDENTIALS_NPY_PATH, 
+#                numpy.array(caregivers_credentials, dtype=object))
 
-# TODO: transferring save and retrieval of info to a different module.
-def load_services():
-    pass
+# # TODO: transferring save and retrieval of info to a different module.
+# def load_services():
+#     pass
 
 # checking the services offered by all the caregivers which could be time consuming.
 # TODO: to break down for better filtering on needs

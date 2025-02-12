@@ -1,6 +1,6 @@
-import os
 from dotenv import load_dotenv
 import mysql.connector
+import os
 import json
 
 load_dotenv()

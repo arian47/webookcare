@@ -1,6 +1,45 @@
 import sqlite3
 import pandas
 import numpy
+import csv
+import os
+
+def save_csv_npy(parent_dir,
+                 file_name,
+                 caregivers_and_services_fl=False,
+                 caregivers_and_services=None):
+    file_path_csv = os.path.join(
+    parent_dir, 
+    f"{file_name}.csv"
+    ).replace('\\', '/')
+    file_path_numpy = os.path.join(
+    parent_dir, 
+    f"{file_name}.npy"
+    ).replace('\\', '/')
+    
+    if caregivers_and_services_fl:
+        tmp = [(j, i.get(j)) for i in caregivers_and_services for j in i]
+
+        with open(file_path_csv, mode='w', newline='') as fo:
+            writer = csv.writer(fo)
+            writer.writerows(tmp)
+
+        numpy.save(file_path_numpy, 
+                numpy.array(caregivers_and_services, 
+                            dtype=object))
+    else:
+        with open(file_path_csv, mode='w', newline='') as fo:
+            writer = csv.writer(fo)
+            writer.writerows(tmp)
+
+        numpy.save(file_path_numpy, 
+                numpy.array(caregivers_and_services, 
+                            dtype=object))
+
+# TODO: transferring save and retrieval of info to a different module.
+def load_services():
+    pass
+
 
 def save_results(data, labels):
     conn = sqlite3.connect('data_labels.db')

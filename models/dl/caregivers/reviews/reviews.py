@@ -2,8 +2,8 @@ import os
 import pathlib
 import mysql.connector
 from typing import List
-from webookcare.tools.save_models import load_ml
 from dotenv import load_dotenv
+from webookcare.tools.save_models import load_ml
 
 load_dotenv()
 
