@@ -1,5 +1,3 @@
-import numpy
-import csv
 import os
 import re
 import mysql.connector

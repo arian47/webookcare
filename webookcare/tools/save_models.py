@@ -3,7 +3,6 @@ import tensorflow
 import pathlib
 import gc
 import pickle
-import surprise
 
 def create_dirs(spec=None):
     if not spec:

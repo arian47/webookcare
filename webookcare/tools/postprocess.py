@@ -2,7 +2,6 @@ import numpy
 import tensorflow
 import pathlib
 import re
-import collections.abc
 
 class PostProcess:
     """post processing textual data:

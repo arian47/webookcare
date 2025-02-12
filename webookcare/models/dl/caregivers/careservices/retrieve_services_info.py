@@ -1,6 +1,4 @@
-import numpy
 import mysql.connector
-import csv
 import os
 from dotenv import load_dotenv
 

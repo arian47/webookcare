@@ -1,6 +1,4 @@
 from fastapi import FastAPI
-import webookcare
-import json
 from webookcare.models.dl.patients.patient_ensemble import rank_caregivers
 from webookcare.models.dl.caregivers.caregiver_ensemble import rank_patients
 from webookcare.queries_api.patient.data_models import PatientReq
