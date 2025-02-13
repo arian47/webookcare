@@ -1,55 +1,217 @@
 # Webookcare
 
-## Usage
+## Tested Environments
 
-Requests are sent to a host you choose to run the main FastAPI app on. Currently, only the **patient ensemble model** has been created. This model relies on several sub-models, including:
+- **OS:** Debian-based distributions  
+- **Python:** 3.10  
 
-- **Care services recommender**
-- **Credentials recommender**
-- **Distance predictor**
-- **Collaborative filtering** (used for ranking based on reviews)
+## Installation
 
-### To set up the server, follow these steps:
+### Step 1: Clone the Repository  
+```bash
+git clone https://github.com/arian47/webookcare.git
+cd webookcare
+```
 
-1. **Access the saved models**: Ensure you have access to each saved model for the underlying components (or the training data to train them).
-2. **Save database credentials**: Store the necessary credentials to access your database in your local environment by creating a `.env` file. A script is provided to help with this.
-3. **Set up Python on your host machine**: Make sure Python is installed and set up correctly.
-4. **Install required packages**: Install the required dependencies by running:
-    ```bash
-    pip install -r requirements.txt
-    ```
-5. **Launch the FastAPI app**: Run the FastAPI server on your host machine.
-6. **Send requests**: Send requests to the host with the appropriate data format and the relevant endpoint.
+### Step 2: Install in Editable Mode  
+```bash
+python3.10 -m pip install -e .
+```
 
-## Description
+### Handling Dependency Issues  
 
-The prediction will eventually consist of a weighted result from multiple models for **careseekers** and **HCWs**, including:
+If you encounter errors related to subprocesses failing to build dependencies, try upgrading them first:  
+```bash
+python3.10 -m pip install --upgrade pip setuptools wheel --break-system-packages
+```
 
-- **Service & Credentials Recommender models**: These models predict labels using the bag of n-grams technique due to limited data availability. The service recommender is trained on bigram labels, while the credentials recommender is trained on unigram labels. The models are trained on data gathered from earlier versions of the application and additional data extracted from PDF documents using regular expression matching patterns. The classification task is multi-label, and an MLP (Multilayer Perceptron) model is used due to insufficient data for sequence models. Text augmentation techniques were applied to increase the training dataset.
-  
-- **Location Predictor model**: A regression model based on the Haversine formula, predicting the distance and randomly chosen data during training.
+#### If you get errors upgrading `wheel`:  
+1. **Manually remove it first:**  
+   ```bash
+   sudo apt remove python3-wheel
+   ```
+2. **Ensure `distutils` is installed if `pip` is inaccessible:**  
+   ```bash
+   sudo apt install python3.10-distutils
+   curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
+   ```
+3. **Retry upgrading:**  
+   ```bash
+   python3.10 -m pip install --upgrade pip setuptools wheel --break-system-packages
+   ```
 
-- **Review Ranking model**: Based on collaborative filtering, which is used for recommendation systems.
+After resolving these, reinstall the package:  
+```bash
+python3.10 -m pip install -e . --break-system-packages
+```
 
-## More on Text Classification Model
+## Setting Up Dependencies  
 
-Several methods have been considered to assist with paraphrasing and augmenting text:
+### Step 1: Execute `path_struct.py`  
 
-- **Manually rewrite sentences**: Alter sentence structure while retaining the original meaning.
-- **Open-source LLMs**: Like Ollama, which show great promise but require high GPU resources to run locally.
-- **Synonym replacement**: Use a thesaurus or libraries like NLTK to replace words with their synonyms.
-- **Grammatical restructuring**: Apply predefined grammatical rules to restructure sentences.
-- **Paraphrasing tools**: Use tools like QuillBot, Paraphraser.io, or APIs from services like TextRazor.
-- **Back-translation**: Translate the sentence to another language and back to the original using services like Google Translate API or MarianMT.
-- **Advanced models for paraphrasing**: Leverage models such as BERT, GPT-3, T5, or Pegasus from Hugging Face Transformers.
-- **Text augmentation libraries**: Use libraries like `nlpaug` or `textattack` to perform text augmentation techniques.
-- **Crowdsourcing platforms**: Platforms like Amazon Mechanical Turk can be used to have multiple people paraphrase the sentences.
+After installation, a **secretly shared** file named `path_struct.py` must be executed to download necessary files and folders for data and model operations:  
+```bash
+python3.10 path_struct.py
+```
+- `path_struct.py` is located in the same directory as `setup.py` and `requirements.txt`.
+- **Important:** URLs for folder sharing might reset, causing errors. Ensure you have updated links.
 
 ---
 
+## Running the Server  
+
+### Step 1: Install `uvicorn`  
+```bash
+python3.10 -m pip install uvicorn
+```
+
+### Step 2: Start the Server  
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### Handling `cryptography` Package Issues  
+
+If you face issues with the `cryptography` package:  
+
+1. **Remove the OS-managed version:**  
+   ```bash
+   sudo apt-get remove --purge python3-cryptography
+   ```
+2. **Reinstall it using `pip`:**  
+   ```bash
+   python3.10 -m pip install cryptography
+   ```
+3. **Ensure OpenSSL development libraries are installed:**  
+   ```bash
+   sudo apt-get install libssl-dev
+   ```
+
+---
+
+## Database Setup  
+
+### Step 1: Verify MySQL Installation  
+```bash
+sudo systemctl status mysql
+```
+If not installed:  
+```bash
+sudo apt update
+sudo apt install mysql-server
+```
+
+### Step 2: Restore MySQL Database  
+
+If you have a **database dump**, follow these steps:
+
+#### **(a) Transferring and Extracting Database Dump**  
+
+1. **Transfer dump from another machine:**  
+   ```bash
+   scp database.tar.gz username@server_address:/path/to/destination
+   ```
+2. **Extract the dump file:**  
+   ```bash
+   tar -zxvf database.tar.gz
+   ```
+
+#### **(b) Importing MySQL Database**  
+
+1. **Create a new database:**  
+   ```sql
+   CREATE DATABASE database;
+   ```
+2. **Import the dump into MySQL:**  
+   ```bash
+   mysql -u root -p database < /path/to/database.sql
+   ```
+
+### Handling MySQL Access Issues  
+
+If you cannot access MySQL, update root user authentication:  
+```sql
+SELECT user, host, plugin FROM mysql.user WHERE user='root';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'your_password';
+FLUSH PRIVILEGES;
+```
+
+Or grant full privileges:  
+```sql
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+```
+
+---
+
+## Running the Server After Database Setup  
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+---
+
+## Usage  
+
+Requests are sent to a host running the main **FastAPI** app.  
+Currently, only the **patient ensemble model** has been implemented, which relies on sub-models:  
+
+- **Care Services Recommender**
+- **Credentials Recommender**
+- **Distance Predictor**
+- **Collaborative Filtering** (for ranking based on reviews)
+
+### Setting Up the Server  
+
+1. **Access saved models:** Ensure models or training data are available.
+2. **Store database credentials:** Save credentials in a `.env` file.
+3. **Install required dependencies:**  
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Launch FastAPI:**  
+   ```bash
+   uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+5. **Send API requests:** Queries can be made to the server.
+
+---
+
+## Text Classification Model  
+
+The prediction is a weighted combination of multiple models for **careseekers** and **HCWs**, including:
+
+- **Service & Credentials Recommender models:**  
+  - Predicts labels using **n-gram techniques** (bigrams for services, unigrams for credentials).
+  - Uses an **MLP model** due to limited data for sequence models.
+  - **Text augmentation** was applied for training.
+
+- **Location Predictor model:**  
+  - Uses the **Haversine formula** for distance estimation.
+
+- **Review Ranking model:**  
+  - Implements **collaborative filtering** for recommendations.
+
+### Text Augmentation Methods  
+
+Several techniques have been used to improve text classification:
+
+- **Manual sentence rewriting**
+- **Open-source LLMs** (e.g., Ollama, GPT-based models)
+- **Synonym replacement** (via NLTK)
+- **Grammatical restructuring**
+- **Paraphrasing tools** (e.g., QuillBot, TextRazor)
+- **Back-translation** (Google Translate API, MarianMT)
+- **Hugging Face Transformers** (e.g., BERT, GPT-3, T5, Pegasus)
+- **Text augmentation libraries** (e.g., `nlpaug`, `textattack`)
+- **Crowdsourcing paraphrasing** (Amazon Mechanical Turk)
+
+---
+
+## Contribution  
+
 Feel free to contribute, open issues, or suggest improvements!
-
-
 
 overfitting is clearly visible even with the basic MLP structure (consisting of dense(8192), dropout(.3), dense(4096), dropout(.5), dense(len(multi label vocabulary))
 
