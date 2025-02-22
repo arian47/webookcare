@@ -209,6 +209,50 @@ Several techniques have been used to improve text classification:
 
 ---
 
+## Optional
+if you got more CPUs available you can create more workers as follows:
+```bash
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:8000 --daemon
+```
+and you can also Set Up a Systemd Service for Auto-Restart cases to server start running after reboots
+```bash
+sudo nano /etc/systemd/system/fastapi.service
+```
+
+Paste the following (update paths as needed):
+```bash
+[Unit]
+Description=FastAPI Server
+After=network.target
+
+[Service]
+User=ubuntu  # Change to your Linux username
+Group=ubuntu
+WorkingDirectory=/path/to/your/project  # Update this to your app directory
+ExecStart=/usr/local/bin/gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app --bind 0.0.0.0:6000
+Restart=always  # Auto-restart on failure
+RestartSec=5  # Wait 5 sec before restarting
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable & Start the Service
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable fastapi
+sudo systemctl start fastapi
+```
+Check Server Status
+```bash
+sudo systemctl status fastapi
+```
+
+Restart Server Manually (if needed)
+```bash
+sudo systemctl restart fastapi
+```
+
 ## Contribution  
 
 Feel free to contribute, open issues, or suggest improvements!
