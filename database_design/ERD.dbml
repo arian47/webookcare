@@ -1,0 +1,661 @@
+Table Users {
+  user_id integer [primary key]
+  email varchar(255) [unique, not null]
+  hashed_password varchar(255) [not null]
+  first_name varchar(100) [not null]
+  last_name varchar(100) [not null]
+  patient_name varchar(100) [not null]
+  account_contact varchar(20) [not null]
+  patient_contact varchar(20) [not null]
+  apple_email varchar(255) [unique, null]
+  google_email varchar(255) [unique, null]
+  postalcode varchar(255) [unique, not null]
+  facebook_id varchar(255) [unique, null]
+  age integer
+  gender enum("male", "female", "other")
+  address varchar(255) [unique, not null]
+  city varchar(30) [unique, not null]
+  province varchar(30) [unique, not null]
+  wallet_id integer [not null, ref: > UserWallet.wallet_id]
+  subscription_type enum('basic', 'premium', None) [not null]
+  referral_code integer [null]
+  business_name varchar(50) [null]
+}
+
+Table Schedules {
+  schedule_id integer [primary key]
+  user_id INT [not null, ref: > Users.user_id]
+  hcw_name varchar(100) [not null]
+  total_hours integer [not null]
+  start_time datetime [not null]
+  end_time datetime [not null]
+  location varchar(255) [not null]
+  patient_name varchar(100) [not null]
+}
+
+// storing basic info like name, email, user managing patients treatments, age, dob, gender
+// other notes, address, 
+Table Patients {
+  patient_id integer [primary key]
+  user_id INT [not null, ref: > Users.user_id]
+  email varchar(255) [unique, not null]
+  first_name varchar(100) [not null]
+  last_name varchar(100) [not null]
+  middle_name varchar(50) [null]
+  date_of_birth date
+  general_notes varchar(500) [null]
+  age integer
+  gender enum("male", "female", "other")
+  notes text
+}
+
+// address info for patients
+Table PatientAddress {
+  address_id int [pk, increment] // Unique Address ID
+  patient_id int [not null, ref: > Patients.patient_id] // Foreign key to patients
+  unit_no varchar(50) [null] // Optional
+  street_address varchar(255)
+  city varchar(100)
+  province varchar(100)
+  postal_code varchar(20)
+  country varchar(100)
+  created_at timestamp
+  updated_at timestamp
+}
+
+// contacts info for patients
+Table PatientContacts {
+  contact_id int [pk, increment]
+  patient_id int [not null, ref: > Patients.patient_id] // Foreign key to patients
+  email_address varchar(255) [unique] // Unique email
+  phone_number varchar(20) [null] // Optional
+  created_at timestamp
+}
+
+// table for holding terms for mobility challenges care is provided for
+Table MobilityChallenges {
+  mobilitychallenges_id int [pk, increment]
+  name varchar(100) [unique]
+  description text
+}
+
+// table holding info for mobility challenges a patient experiences and who recorded that
+Table PatientMobilityChallenges {
+  patientmobilitychallenges_id int [pk, increment]
+  mobilitychallenges_id int [not null, ref: > MobilityChallenges.mobilitychallenges_id]
+  patient_id int [not null, ref: > Patients.patient_id]
+  assigned_by int [not null, ref: > Users.user_id]
+  recorded_by int [ref: >HealthcareWorkers.hcw_id]
+  recorded_at timestamp
+  description text
+}
+
+// info about mobility challenges managed by a user or company possible marketing purposes later
+Table UserManagedMobilityChallenges {
+  usermanagedmobilitychallenges_id int [pk, increment]
+  mobilitychallenges_id int [not null, ref: > MobilityChallenges.mobilitychallenges_id]
+  user_id int [ref: > Users.user_id]
+  assigned_at timestamp
+  description text
+}
+
+// perception communication issues a vocabulary for holding info about care activities
+Table PreceptionCommunicationIssues {
+  preceptioncommunicationissues_id int [pk, increment]
+  name varchar(100) [unique]
+  description text
+}
+
+// perception communication issues recorded for a patient
+Table PatientPreceptionCommunicationIssues {
+  patientpreceptioncommunicationissues_id int [pk, increment]
+  preceptioncommunicationissues_id int [not null, ref: > PreceptionCommunicationIssues.preceptioncommunicationissues_id]
+  patient_id int [not null, ref: > Patients.patient_id]
+  assigned_by int [not null, ref: > Users.user_id]
+  recorded_by int [ref: > HealthcareWorkers.hcw_id]
+  recorded_at timestamp
+  description text
+}
+
+// info about perception communication issues managed by a user or company possible marketing purposes later
+Table UserManagedPreceptionCommunicationIssues {
+  usermanagedpreceptioncommunicationissues_id int [pk, increment]
+  preceptioncommunicationissues_id int [ref: > PreceptionCommunicationIssues.preceptioncommunicationissues_id]
+  user_id int [ref: > Users.user_id]
+  assigned_at timestamp
+  description text
+}
+
+// holding info for terms for nutritional challenges
+Table NutritionalChallenges {
+  nutritionalchallenges_id int [pk, increment]
+  name varchar(100) [unique]
+  notes text
+}
+
+// recorded info for patients with nutritional challenges
+Table PatientNutritionalChallenges {
+  patientnutritionalchallenges_id int [pk, increment]
+  nutritionalchallenges_id int [not null, ref: > NutritionalChallenges.nutritionalchallenges_id]
+  patient_id int [not null, ref: > Patients.patient_id]
+  assigned_by int [not null, ref: > Users.user_id]
+  recorded_by int [ref: > HealthcareWorkers.hcw_id]
+  recorded_at timestamp
+  notes text
+}
+
+// info about nutritional challenges managed by a user or company possible marketing purposes later
+Table UserManagedNutritionalChallenges {
+  usermanagednutritionalchallenges_id int [pk, increment]
+  nutritionalchallenges_id int [not null, ref: > NutritionalChallenges.nutritionalchallenges_id]
+  user_id int [not null, ref: > Users.user_id]
+  assigned_at timestamp
+  notes text
+}
+
+// mood states terms info
+Table Moods {
+  mood_id int [pk, increment]
+  name varchar(100) [unique]
+  description text
+}
+
+// patients mood info and changes recorded
+Table PatientMoods {
+  patientmoods_id int [pk, increment]
+  patient_id int [not null, ref: > Patients.patient_id]
+  mood_id int [not null, ref: > Moods.mood_id]
+  recorded_at timestamp
+  recorded_by int [ref: > HealthcareWorkers.hcw_id]
+  assigned_by int [not null, ref: > Users.user_id]
+  notes text
+}
+
+// info about patient moods states managed by a user or company possible marketing purposes later
+Table UserManagedMoods {
+  usermanagedmoods_id int [pk, increment]
+  mood_id int [not null, ref: > Moods.mood_id]
+  user_id int [not null, ref: > Users.user_id]
+  assigned_at timestamp
+  notes text
+}
+
+// info about health conditions terms for care
+Table HealthConditions {
+  condition_id int [pk, increment]
+  name varchar(100) [unique]
+  description text
+}
+
+// health conditions recorded for a patient
+Table PatientHealthConditions {
+  patienthealthconditions_id int [pk, increment]
+  patient_id int [not null, ref: > Patients.patient_id]
+  healthconditions_id int [not null, ref: > HealthConditions.condition_id]
+  recorded_by int [ref: > HealthcareWorkers.hcw_id]
+  assigned_by int [not null, ref: > Users.user_id]
+  recorded_at timestamp
+  notes text
+}
+
+// info about health conditions managed by a user or company possible marketing purposes later
+Table UserManagedHealthConditions {
+  userhealthconditions_id int [pk, increment]
+  healthconditions_id int [not null, ref: > HealthConditions.condition_id]
+  user_id int [not null, ref: > Users.user_id]
+  started_at date
+  assigned_at timestamp
+}
+
+// terms for cognition states
+Table CognitionStates {
+  cognition_id int [pk, increment]
+  name varchar(100) [unique]
+  description text
+}
+
+// recorded info about patients cognition states
+Table PatientCognition {
+  patientcognition_id int [pk, increment]
+  patient_id int [not null, ref: > Patients.patient_id]
+  cognition_id int [not null, ref: > CognitionStates.cognition_id]
+  assigned_by int [not null, ref: > Users.user_id]
+  recorded_at timestamp
+  severity enum('Mild', 'Moderate', 'Severe')
+  notes text
+}
+
+// terms for allergies 
+Table Allergies {
+  allergy_id int [pk, increment]
+  name varchar(200) [unique]
+  description text
+}
+
+// patient allergy info recorded
+Table PatientAllergies {
+  patient_allergy_id int [pk, increment]
+  patient_id int [not null, ref: > Patients.patient_id]
+  allergy_id int [not null, ref: > Allergies.allergy_id]
+  assigned_by int [not null, ref: > Users.user_id]
+  assigned_at timestamp
+}
+
+// diagnosis terms and conditions info
+Table Diagnosis {
+  diagnosis_id int [pk, increment]
+  name varchar(200) [unique]
+  description text
+}
+
+// patient diagnosis info recorded
+Table PatientDiagnosis {
+  patient_diagnosis_id int [pk, increment]
+  patient_id int [not null, ref: > Patients.patient_id]
+  diagnosis_id int [not null, ref: > Diagnosis.diagnosis_id]
+  assigned_by int [not null, ref: > Users.user_id]
+  assigned_at timestamp
+}
+
+// types of property info
+Table PropertyType {
+  property_type_id int [pk, increment]
+  name varchar(100) [unique]
+  description text
+  created_at timestamp
+}
+
+// info about patients property types
+Table PatientPropertyType {
+  patient_property_type_id int [pk, increment]
+  patient_id int [not null, ref: > Patients.patient_id]
+  property_type_id int [not null, ref: > PropertyType.property_type_id]
+  assigned_by int [not null, ref: > Users.user_id]
+  assigned_at timestamp
+}
+
+// info about property types managed by a user or company possible marketing purposes later
+Table UserManagedPropertyType {
+  user_manged_property_type_id int [pk, increment]
+  property_type_id int [not null, ref: > PropertyType.property_type_id]
+  user_id int [not null, ref: > Users.user_id]
+  assigned_at timestamp
+}
+
+// different caresettings info
+Table CareSettings {
+  care_setting_id int [pk, increment]
+  name varchar(100) [unique]
+  description text
+  created_at timestamp
+}
+
+// info about patients care setting
+Table PatientCareSettings {
+  patient_care_setting_id int [pk, increment]
+  patient_id int [not null, ref: > Patients.patient_id]
+  care_setting_id int [not null, ref: > CareSettings.care_setting_id]
+  assigned_by int [not null, ref: > Users.user_id]
+  assigned_at timestamp
+}
+
+// info about care settings managed by a user or company possible marketing purposes later
+Table UserManagedCareSettings {
+  user_managed_care_setting_id int [pk, increment]
+  user_id int [not null, ref: > Users.user_id]
+  care_setting_id int [not null, ref: > CareSettings.care_setting_id]
+  created_at timestamp
+}
+
+// care settings HCW preferrs working in
+Table HealthcareWorkerSettings {
+  hcw_id int [ref: > HealthcareWorkers.hcw_id]
+  setting_id int [ref: > CareSettings.care_setting_id]
+  primary key (hcw_id, setting_id)
+}
+
+// posted jobs info
+Table Jobs {
+  job_id integer [pk, increment]
+  user_id INT [not null, ref: > Users.user_id]
+  patient_id INT [not null, ref: > Patients.patient_id]
+  job_status enum('reposted', 'paused', 'closed', 'active')
+  position varchar(255)
+  currency varchar(10)
+  job_type enum("Employment", "Independent Contractor", "Volunteer", "Sponsorship")
+  employment_class enum("Permanent P/T", "Permanent F/T", "Temporary P/T", "Temporary F/T", "Casual")
+  care_activity_type_child_care enum("nanny", "baby sitter", "child care assistant", 
+                                     "youth worker", "early childhood educator") [not null]
+  care_activity_type_adult_care enum("house keeper", "driver", "cook", "tech helper", 
+                                     "shopper", "youth worker", "early childhood educator", 
+                                     "recreation aide", "greeter/screener", "dishwasher", 
+                                     "scheduler", "payroll", "dietary aid") [not null]
+  job_description varchar(500) [not null]
+  nursing_activity bool [not null]
+  childcare_activity bool [not null]
+  supportworker_activity bool [not null]
+  job_type enum("employment", "independent contractor", "volunteer", "sponsorship") [not null]
+  total_budget float
+  hourly_rate float
+  livein_flat_daily_rate float
+  care_recurrence_type enum("one time", "repeat weekly") [not null]
+  shift_type enum("day shift", "night shift", "live in") [not null]
+  job_type_schedule enum("permanent part time", "permanent F/T", "temporary P/T", "temporary F/T", "casual") [not null]
+  start_date date
+  end_date date
+  start_time time
+  end_time time
+  days enum('saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday')
+  total_weekly_hours float
+  expected_care_activity_length integer
+  HCW_experience_preferred integer
+  additional_notes varchar(500)
+  created_at timestamp
+}
+
+// credentials needed for the job
+Table JobCredentials {
+    jobcredentials_id int [pk, increment]
+    credentials_id int [not null, ref: > Credentials.credential_id]
+    job_id int [not null, ref: > Jobs.job_id]
+}
+
+// services needed for the job
+Table JobServices {
+    jobservices_id int [pk, increment]
+    service_id int [not null, ref: > Services.service_id]
+    job_id int [not null, ref: > Jobs.job_id]
+    service_routine enum('morning', 'lunch', 'afternoon', 'dinner', 'evening')
+    scheduled_manner bool
+    days enum('sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri')
+    notes text
+}
+
+// exceptions for work environments i.e. caged pets, nanny cams, etc.
+Table WorkEnvironmentExceptions {
+    work_environment_exceptions_id int [pk, increment]
+    name varchar(200) [unique]
+    description text
+}
+
+// jobs and work environment exceptions associated with it
+Table JobWorkEnvironmentExceptions {
+    jobworkenvironmentexceptions_id int [pk, increment]
+    work_environment_exceptions_id int [ref: > WorkEnvironmentExceptions.work_environment_exceptions_id]
+    job_id int [not null, ref: > Jobs.job_id]
+}
+
+// languages served on the platform
+Table Languages {
+    language_id int [pk, increment]
+    name varchar(100) [unique]
+}
+
+// languages desired for the job posting
+Table JobLanguages {
+    joblanguages_id int [pk, increment]
+    language_id int [not null, ref: > Languages.language_id]
+    job_id int [not null, ref: > Jobs.job_id]
+    hcw_id int [not null, ref: > HealthcareWorkers.hcw_id]
+}
+
+// info for child care activities
+Table ChildCareActivity {
+    childcareactivity_id int [pk, increment]
+    name varchar(100) [unique]
+    description text
+}
+
+// jobs involving child care activities and hcw who did the job
+Table JobChildCareActivity {
+    jobchildcareactivity_id int [pk, increment]
+    job_id int [not null, ref: > Jobs.job_id]
+    hcw_id int [not null, ref: > HealthcareWorkers.hcw_id]
+    notes text
+}
+
+// info for adult care activities
+Table AdultCareActivity {
+    adultcareactivity_id int [pk, increment]
+    name varchar(100) [unique]
+    description text
+}
+
+// adult care activities for a specific job
+Table JobAdultCareActivity {
+    jobadultcareactivity int [pk, increment]
+    job_id int [not null, ref: > Jobs.job_id]
+    hcw_id int [not null, ref: > HealthcareWorkers.hcw_id]
+    notes text
+}
+
+
+Table CarePlan {
+  careplan_id int [pk, increment]
+  patient_id int [ref: > Patients.patient_id]
+  job_id int [ref: > Jobs.job_id]
+}
+
+// Join table for the many-to-many relationship
+Table job_credentials {
+  job_id int [ref: > Jobs.job_id] // References Jobs table
+  credential_id int [ref: > credentials.id] // References PersonalInterests table
+  primary key (job_id, credential_id) // Composite primary key
+}
+
+// Join table for the many-to-many relationship
+Table job_services {
+  job_id int [ref: > Jobs.job_id] // References Jobs table
+  service_id int [ref: > Services.id] // References Services table
+  primary key (job_id, service_id) // Composite primary key
+}
+
+// Join table for the many-to-many relationship
+Table job_personal_interests {
+  job_id int [ref: > Jobs.job_id] // References Jobs table
+  interest_id int [ref: > PersonalInterests.id] // References PersonalInterests table
+  primary key (job_id, interest_id) // Composite primary key
+}
+
+Table JobApplications {
+  application_id int [pk, increment] // Unique application ID
+  job_id int [not null, ref: > Jobs.job_id] // Job being applied to
+  hcw_id int [not null, ref: > HealthcareWorkers.hcw_id] // HCW applying
+  status enum("Pending", "Accepted", "Rejected", "Interview", "Shortlisted", "meet&greet", "Hired")
+  applied_at timestamp // Timestamp when application was submitted
+  resume_link varchar // Optional: link to resume or CV
+  cover_letter text // Optional: cover letter
+}
+
+Table ApplicationDocuments {
+  document_id int [pk, increment] // Unique document ID
+  application_id int [not null, ref: > JobApplications.application_id] // Links to the job application
+  document_type enum("Resume", "Certification", "Reference", "Other") // Type of document
+  file_url varchar // Storage path or URL of the file
+  uploaded_at timestamp // Timestamp when document was uploaded
+}
+
+Table PersonalInterests {
+  id int [pk, increment] // Unique identifier for each credential
+  name varchar // Name of the credential (e.g., "Registered Nurse")
+  description text // Optional: A detailed description of the interest
+}
+
+
+Table Credentials {
+  credential_id int [pk, increment] // Unique identifier for each credential
+  name varchar // Name of the credential (e.g., "Registered Nurse")
+  description text // Optional: A detailed description of the credential
+  is_active boolean // Optional: Indicates whether the credential is currently valid for assignment
+}
+
+Table HealthcareWorkers {
+  hcw_id int [pk, increment] // Unique identifier for each HCW
+  first_name varchar(100)
+  last_name varchar(100)
+  middle_name varchar(100) [null]
+  business_name varchar(255) [null]
+  legal_name varchar(255) [null]
+  date_of_birth date
+  sin_ssn varchar(20) [unique]
+  gender enum("Male", "Female", "Other")
+  contact_info varchar // Optional: email, phone number, etc.
+  hire_date date // Optional: Date the worker was hired
+  ethnicity int [ref: > Ethnicities.ethnicity_id] // Foreign key to Ethnicities table
+  pay_period_schedule enum("Bi-Weekly (26/year)", "Bi-Weekly (27/year)", "Manual", "Monthly (12/year)", "Semi-Monthly Non-Standard", "Weekly")
+  permission_group enum("Regular Employee (Punch In/Out)", "Admin", "Manager") // Access control
+  status enum("Active", "Inactive (Temporary)", "Leave - Illness/Injury", "Leave - Maternity/Parental", "Leave - Other", "Terminated/Quit")
+  policy_group enum("Webookcare App Healthcare Workers") // Fixed policy group for now
+  salary_type enum("Hourly", "Salary (Weekly)", "Salary (Bi-Weekly)", "Salary (Monthly)", "Salary (Annual)")
+  hourly_rate decimal(10,2) [null] // If applicable
+  created_at timestamp
+  updated_at timestamp
+}
+
+// hcw types
+Table HealthcareWorkerTypes {
+    healthcareworkertypes_id int [pk, increment]
+    hcw_id int [ref: > HealthcareWorkers.hcw_id]
+}
+
+Table HealthcareWorkerAddress {
+  address_id int [pk, increment] // Unique Address ID
+  hcw_id int [not null, ref: > HealthcareWorkers.hcw_id] // Foreign key to HCW
+  unit_no varchar(50) [null] // Optional
+  street_address varchar(255)
+  city varchar(100)
+  province varchar(100)
+  postal_code varchar(20)
+  country varchar(100)
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table HealthcareWorkerContacts {
+  contact_id int [pk, increment]
+  hcw_id int [not null, ref: > HealthcareWorkers.hcw_id] // Foreign key to HCW
+  email_address varchar(255) [unique] // Unique email
+  phone_number varchar(20) [null] // Optional
+  created_at timestamp
+}
+
+Table HealthcareWorkerNotes {
+  note_id int [pk, increment]
+  hcw_id int [not null, ref: > HealthcareWorkers.hcw_id] // Foreign key to HCW
+  note text // Additional notes
+  created_at timestamp
+}
+
+Table Ethnicities {
+  ethnicity_id int [pk, increment]
+  name varchar(100) [unique]
+}
+
+Table HealthcareWorkerTags {
+  hcw_id int [ref: > HealthcareWorkers.hcw_id]
+  tag_id int [ref: > Tags.tag_id]
+  primary key (hcw_id, tag_id)
+}
+
+Table Tags {
+  tag_id int [pk, increment]
+  name varchar(255) [unique]
+}
+
+Table HCWCredentials {
+  id int [pk, increment] // Unique identifier for each worker-credential link
+  worker_id int [ref: > HealthcareWorkers.hcw_id] // Foreign key to healthcare workers table
+  credential_id int [ref: > credentials.id] // Foreign key to credentials table
+  issue_date date // Date when the credential was awarded
+  expiration_date date // Optional: Expiration date for the credential
+  certification_authority varchar // Optional: The certifying authority
+  document_link varchar // Optional: Link to a certificate file or supporting document
+}
+
+Table Services {
+  service_id int [pk, increment] // Unique identifier for each credential
+  name varchar // Name of the credential (e.g., "Registered Nurse")
+  description text // Optional: A detailed description of the credential
+  is_active boolean // Optional: Indicates whether the credential is currently valid for assignment
+}
+
+Table HCWServices {
+  id int [pk, increment] // Unique identifier for each worker-credential link
+  worker_id int [ref: > HealthcareWorkers.hcw_id] // Foreign key to healthcare workers table
+  service_id int [ref: > Services.id] // Foreign key to credentials table
+}
+
+Table PaymentSchedules {
+  paymentschedule_id int [pk, increment]
+  worker_id int [ref: > HealthcareWorkers.hcw_id]
+  job_id int [ref: > Jobs.job_id]
+  patient_id int [ref: > Patients.patient_id]
+  timezone varchar
+  date_format varchar
+  time_format varchar
+  calendar_start_day enum('sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri')
+  pay_period_frequency enum('weekly (52/year)', 'bi-weekly (26/year)', 'semi-monthly (26/year)', 'monthly (12/year)', 'weekly (53/year)', 'bi-weekly (27/year)')
+  start_date date
+  end_date date
+  transaction_date date
+}
+
+Table UserWallet {
+  wallet_id int [pk, increment]
+  user_id int [not null, ref: > Users.user_id]
+  balance decimal(10, 2)
+  last_updated timestamp
+  //payment_methods enum('stripe')
+  //paystubs varchar
+  //expenses
+  //invoice_id
+}
+
+Table UserInvoice {
+  invoice_id int [pk, increment]
+  user_id int [ref: > Users.user_id]
+  invoice_start_date date
+  invoice_end_date date
+}
+
+Table UserPayment {
+  payment_id int [pk, increment]
+  invoice_id int [ref: > UserInvoice.invoice_id]
+  wallet_id int [ref: > UserWallet.wallet_id]
+  paymentschedule_id int [ref: > PaymentSchedules.paymentschedule_id]
+  done_at timestamp
+  payment_date date
+  payment_method enum('credit', 'debit')
+}
+
+/*
+Table Expenses {
+  expense_id int [pk, increment]
+  user_id int [ref: > Users.user_id]
+  hcw_id int [ref: > HealthcareWorkers.hcw_id]
+  expense_date date
+  expense_description varchar
+  payment_method enum('cash', 'debit', 'credit', 'direct deposit', 'digital wallet', 'cheque')
+  expense_type enum('groceries', 'medical', 'personal prediction equipment', 'supplies', 'parking',
+                    'travel_related', 'meals', 'incidental expenses', 'entertainment', 'other')
+  amount float
+  attachements varchar
+}
+*/
+
+Table WalletTransactions {
+  transaction_id int [pk, increment] // Unique transaction ID
+  wallet_id int [not null, ref: > UserWallet.wallet_id] // Links to wallet
+  recorded_by int [ref: > HealthcareWorkers.hcw_id] // Who logged the expense (optional)
+  job_id int [ref: > Jobs.job_id] // If expense is job-related
+  transaction_type enum("Expense", "Deposit", "Refund", "Adjustment") // Type of transaction
+  category enum("HCW Service", "Medical Supply", "Transportation", "Other") // Type of expense
+  amount decimal(10,2) [not null] // Expense or deposit amount
+  payment_method enum("Cash", "Credit Card", "Insurance", "Wallet Deduction") // How was it paid?
+  status enum("Pending", "Completed", "Reversed") [default: "Completed"] // Status of the transaction
+  created_at timestamp // When the transaction was recorded
+  notes text // Additional details
+}
+
+
+
