@@ -1,51 +1,75 @@
+// individuals and companies managing patients
 Table Users {
   user_id integer [primary key]
-  email varchar(255) [unique, not null]
-  hashed_password varchar(255) [not null]
   first_name varchar(100) [not null]
   last_name varchar(100) [not null]
-  patient_name varchar(100) [not null]
-  account_contact varchar(20) [not null]
-  patient_contact varchar(20) [not null]
+  middle_name varchar(100) [null]
+  age integer
+  date_of_birth date
+  contact_info varchar(255) [not null]
+  gender enum("Male", "Female", "Other")
+  hashed_password varchar(255) [not null]
+  email varchar(255) [unique, not null]
   apple_email varchar(255) [unique, null]
   google_email varchar(255) [unique, null]
-  postalcode varchar(255) [unique, not null]
   facebook_id varchar(255) [unique, null]
-  age integer
-  gender enum("male", "female", "other")
-  address varchar(255) [unique, not null]
-  city varchar(30) [unique, not null]
-  province varchar(30) [unique, not null]
-  wallet_id integer [not null, ref: > UserWallet.wallet_id]
-  subscription_type enum('basic', 'premium', None) [not null]
-  referral_code integer [null]
-  business_name varchar(50) [null]
+  wallet_id integer [null, ref: > UserWallet.wallet_id]
+  referral_code varchar [null]
+  business_name varchar(255) [null]
+  legal_name varchar(255) [null]
 }
 
-Table Schedules {
-  schedule_id integer [primary key]
-  user_id INT [not null, ref: > Users.user_id]
-  hcw_name varchar(100) [not null]
-  total_hours integer [not null]
-  start_time datetime [not null]
-  end_time datetime [not null]
-  location varchar(255) [not null]
-  patient_name varchar(100) [not null]
+// user address info
+Table UserAddress {
+  address_id int [pk, increment] // Unique Address ID
+  user_id int [not null, ref: > Users.user_id] // Foreign key to Users
+  unit_no varchar(50) [null] // Optional
+  street_address varchar(255)
+  city varchar(100)
+  province varchar(100)
+  postal_code varchar(20)
+  country varchar(100)
+  created_at timestamp
+  updated_at timestamp
+}
+
+// subscriptions info
+Table Subscriptions {
+  subscription_id int [pk, increment]
+  name varchar(100) [unique]
+  description text
+  price decimal(10, 2)
+  duration enum('monthly', 'yearly')
+  created_at timestamp
+}
+
+// user subscriptions historical info
+Table UserSubscriptions {
+  user_subscription_id int [pk, increment]
+  user_id int [not null, ref: > Users.user_id]
+  subscription_id int [not null, ref: > Subscriptions.subscription_id]
+  start_date date
+  end_date date
+  status enum('active', 'inactive', 'cancelled')
+  created_at timestamp
 }
 
 // storing basic info like name, email, user managing patients treatments, age, dob, gender
 // other notes, address, 
 Table Patients {
-  patient_id integer [primary key]
+  patient_id integer [pk, increment]
   user_id INT [not null, ref: > Users.user_id]
   email varchar(255) [unique, not null]
   first_name varchar(100) [not null]
   last_name varchar(100) [not null]
-  middle_name varchar(50) [null]
-  date_of_birth date
-  general_notes varchar(500) [null]
+  middle_name varchar(100) [null]
   age integer
-  gender enum("male", "female", "other")
+  date_of_birth date
+  gender enum("Male", "Female", "Other")
+  profile_picture varchar(255) [null]
+  hashed_password varchar(255) [null] // for later use
+  created_at timestamp
+  updated_at timestamp
   notes text
 }
 
@@ -67,9 +91,44 @@ Table PatientAddress {
 Table PatientContacts {
   contact_id int [pk, increment]
   patient_id int [not null, ref: > Patients.patient_id] // Foreign key to patients
-  email_address varchar(255) [unique] // Unique email
+  email_address varchar(255) [null] // Unique email
   phone_number varchar(20) [null] // Optional
   created_at timestamp
+}
+
+// terms used for medicine
+Table Medicine {
+  medicine_id int [pk, increment]
+  name varchar(100) [unique]
+  description text
+}
+
+// medicine to be used for patients during a job and care plan
+Table PatientMedicine {
+  patient_medicine_id int [pk, increment]
+  patient_id int [not null, ref: > Patients.patient_id]
+  medicine_id int [not null, ref: > Medicine.medicine_id]
+  careplan_id int [not null, ref: > CarePlans.careplan_id]
+  assigned_by int [not null, ref: > Users.user_id]
+  //recorded_by int [ref: > HealthcareWorkers.hcw_id]
+  recorded_at timestamp
+  dosage varchar(100)
+  frequency enum('daily', 'weekly', 'monthly', 'as needed')
+  notes text
+}
+
+// personal interests terms
+Table PersonalInterests {
+  id int [pk, increment] // Unique identifier for each credential
+  name varchar // Name of the credential (e.g., "Registered Nurse")
+  description text // Optional: A detailed description of the interest
+}
+
+// personal interests for a patient
+Table PatientPersonalInterests {
+  id int [pk, increment] // Unique identifier for each credential
+  patient_id int [not null, ref: > Patients.patient_id] // Foreign key to patients
+  interest_id int [not null, ref: > PersonalInterests.id] // Foreign key to interests
 }
 
 // table for holding terms for mobility challenges care is provided for
@@ -85,7 +144,8 @@ Table PatientMobilityChallenges {
   mobilitychallenges_id int [not null, ref: > MobilityChallenges.mobilitychallenges_id]
   patient_id int [not null, ref: > Patients.patient_id]
   assigned_by int [not null, ref: > Users.user_id]
-  recorded_by int [ref: >HealthcareWorkers.hcw_id]
+  careplan_id int [not null, ref: > CarePlans.careplan_id]
+  //recorded_by int [ref: >HealthcareWorkers.hcw_id]
   recorded_at timestamp
   description text
 }
@@ -112,7 +172,8 @@ Table PatientPreceptionCommunicationIssues {
   preceptioncommunicationissues_id int [not null, ref: > PreceptionCommunicationIssues.preceptioncommunicationissues_id]
   patient_id int [not null, ref: > Patients.patient_id]
   assigned_by int [not null, ref: > Users.user_id]
-  recorded_by int [ref: > HealthcareWorkers.hcw_id]
+  careplan_id int [not null, ref: > CarePlans.careplan_id]
+  //recorded_by int [ref: > HealthcareWorkers.hcw_id]
   recorded_at timestamp
   description text
 }
@@ -138,8 +199,9 @@ Table PatientNutritionalChallenges {
   patientnutritionalchallenges_id int [pk, increment]
   nutritionalchallenges_id int [not null, ref: > NutritionalChallenges.nutritionalchallenges_id]
   patient_id int [not null, ref: > Patients.patient_id]
+  careplan_id int [not null, ref: > CarePlans.careplan_id]
   assigned_by int [not null, ref: > Users.user_id]
-  recorded_by int [ref: > HealthcareWorkers.hcw_id]
+  //recorded_by int [ref: > HealthcareWorkers.hcw_id]
   recorded_at timestamp
   notes text
 }
@@ -165,8 +227,9 @@ Table PatientMoods {
   patientmoods_id int [pk, increment]
   patient_id int [not null, ref: > Patients.patient_id]
   mood_id int [not null, ref: > Moods.mood_id]
+  careplan_id int [not null, ref: > CarePlans.careplan_id]
   recorded_at timestamp
-  recorded_by int [ref: > HealthcareWorkers.hcw_id]
+  //recorded_by int [ref: > HealthcareWorkers.hcw_id]
   assigned_by int [not null, ref: > Users.user_id]
   notes text
 }
@@ -192,7 +255,8 @@ Table PatientHealthConditions {
   patienthealthconditions_id int [pk, increment]
   patient_id int [not null, ref: > Patients.patient_id]
   healthconditions_id int [not null, ref: > HealthConditions.condition_id]
-  recorded_by int [ref: > HealthcareWorkers.hcw_id]
+  //recorded_by int [ref: > HealthcareWorkers.hcw_id]
+  careplan_id int [not null, ref: > CarePlans.careplan_id]
   assigned_by int [not null, ref: > Users.user_id]
   recorded_at timestamp
   notes text
@@ -219,6 +283,7 @@ Table PatientCognition {
   patientcognition_id int [pk, increment]
   patient_id int [not null, ref: > Patients.patient_id]
   cognition_id int [not null, ref: > CognitionStates.cognition_id]
+  careplan_id int [not null, ref: > CarePlans.careplan_id]
   assigned_by int [not null, ref: > Users.user_id]
   recorded_at timestamp
   severity enum('Mild', 'Moderate', 'Severe')
@@ -237,6 +302,7 @@ Table PatientAllergies {
   patient_allergy_id int [pk, increment]
   patient_id int [not null, ref: > Patients.patient_id]
   allergy_id int [not null, ref: > Allergies.allergy_id]
+  careplan_id int [not null, ref: > CarePlans.careplan_id]
   assigned_by int [not null, ref: > Users.user_id]
   assigned_at timestamp
 }
@@ -253,6 +319,7 @@ Table PatientDiagnosis {
   patient_diagnosis_id int [pk, increment]
   patient_id int [not null, ref: > Patients.patient_id]
   diagnosis_id int [not null, ref: > Diagnosis.diagnosis_id]
+  careplan_id int [not null, ref: > CarePlans.careplan_id]
   assigned_by int [not null, ref: > Users.user_id]
   assigned_at timestamp
 }
@@ -322,7 +389,6 @@ Table Jobs {
   job_status enum('reposted', 'paused', 'closed', 'active')
   position varchar(255)
   currency varchar(10)
-  job_type enum("Employment", "Independent Contractor", "Volunteer", "Sponsorship")
   employment_class enum("Permanent P/T", "Permanent F/T", "Temporary P/T", "Temporary F/T", "Casual")
   care_activity_type_child_care enum("nanny", "baby sitter", "child care assistant", 
                                      "youth worker", "early childhood educator") [not null]
@@ -334,23 +400,158 @@ Table Jobs {
   nursing_activity bool [not null]
   childcare_activity bool [not null]
   supportworker_activity bool [not null]
-  job_type enum("employment", "independent contractor", "volunteer", "sponsorship") [not null]
   total_budget float
   hourly_rate float
   livein_flat_daily_rate float
   care_recurrence_type enum("one time", "repeat weekly") [not null]
   shift_type enum("day shift", "night shift", "live in") [not null]
-  job_type_schedule enum("permanent part time", "permanent F/T", "temporary P/T", "temporary F/T", "casual") [not null]
   start_date date
   end_date date
   start_time time
   end_time time
-  days enum('saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday')
   total_weekly_hours float
   expected_care_activity_length integer
   HCW_experience_preferred integer
+  job_type enum("employment", "independent contractor", "volunteer", "sponsorship") [not null]
+  policy_group enum("Webookcare App Healthcare Workers") // Fixed policy group for now
+  permission_group enum("Regular Employee (Punch In/Out)", "Admin", "Manager") // Access control
+  days enum('saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday')
+  job_type_schedule enum("permanent part time", "permanent F/T", "temporary P/T", "temporary F/T", "casual") [not null]
+  salary_type enum("Hourly", "Salary (Weekly)", "Salary (Bi-Weekly)", "Salary (Monthly)", "Salary (Annual)")
+  pay_period_schedule enum("Bi-Weekly (26/year)", "Bi-Weekly (27/year)", "Manual", "Monthly (12/year)", "Semi-Monthly Non-Standard", "Weekly")
   additional_notes varchar(500)
   created_at timestamp
+}
+
+// Tracks messages related to job applications or active jobs
+Table JobMessages {
+  message_id int [pk, increment] // Unique message ID
+  sender_id int [not null, ref: > Users.user_id] // Sender (User, Admin, or HCW)
+  receiver_id int [not null, ref: > Users.user_id] // Receiver (User, Admin, or HCW)
+  job_application_id int [ref: > JobApplications.application_id] // Optional: Links to a job application
+  hcwjob_id int [ref: > HCWJobs.hcwjob_id] // Optional: Links to an active job
+  message_text text [not null] // Message content
+  attachment_link varchar // Optional: Link to attached files (resume, contract, etc.)
+  sent_at timestamp [default: current_timestamp] // Timestamp when message was sent
+  read_status enum("Unread", "Read") [default: "Unread"] // Read status
+  created_at timestamp [default: current_timestamp] // Record creation time
+  updated_at timestamp [default: current_timestamp] // Last update time
+}
+
+// TODO: check for compaibility with jobs and care plans
+// care schedules associated with a care plan
+Table CareSchedules {
+  careschedule_id integer [pk, increment]
+  patient_id INT [not null, ref: > Patients.patient_id]
+  careplan_id INT [not null, ref: > CarePlans.careplan_id]
+  //user_id INT [not null, ref: > Users.user_id]
+  hcw_id int [null, ref: > HealthcareWorkers.hcw_id]
+  total_hours integer [not null]
+  start_time datetime [not null]
+  end_time datetime [not null]
+  location varchar(255) [not null]
+  status enum('pending', 'completed', 'cancelled', 'missed')
+}
+
+// which hcw have access to a careplan
+Table CarePlanShares {
+  share_id INT [pk, increment]
+  careplan_id INT [not null, ref: > CarePlans.careplan_id]
+  hcw_id INT [not null, ref: > HealthcareWorkers.hcw_id]
+  status ENUM("pending", "accepted", "declined")
+}
+
+Table PaymentSchedules {
+  paymentschedule_id int [pk, increment]
+  worker_id int [ref: > HealthcareWorkers.hcw_id]
+  job_id int [ref: > Jobs.job_id]
+  patient_id int [ref: > Patients.patient_id]
+  timezone varchar
+  date_format varchar
+  time_format varchar
+  calendar_start_day enum('sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri')
+  pay_period_frequency enum('weekly (52/year)', 'bi-weekly (26/year)', 'semi-monthly (26/year)', 'monthly (12/year)', 'weekly (53/year)', 'bi-weekly (27/year)')
+  start_date date
+  end_date date
+  transaction_date date
+}
+
+Table UserWallet {
+  wallet_id int [pk, increment]
+  user_id int [not null, ref: > Users.user_id]
+  balance decimal(10, 2)
+  last_updated timestamp
+  created_at timestamp
+  //payment_methods enum('stripe')
+  //paystubs varchar
+  //expenses
+  //invoice_id
+}
+
+Table UserInvoices {
+  invoice_id int [pk, increment]
+  user_id int [not null, ref: > Users.user_id]
+  patient_id INT [not null, ref: > Patients.patient_id]
+  invoice_start_date date
+  invoice_end_date date
+  total_amount DECIMAL(10,2)
+  due_date DATE
+  status ENUM("pending", "paid", "overdue")
+  created_at TIMESTAMP
+}
+
+//Table UserPayment {
+//  payment_id int [pk, increment]
+//  invoice_id int [ref: > UserInvoice.invoice_id]
+//  wallet_id int [ref: > UserWallet.wallet_id]
+//  paymentschedule_id int [ref: > PaymentSchedules.paymentschedule_id]
+//  done_at timestamp
+//  payment_date date
+//  payment_method enum('credit', 'debit')
+//}
+
+// expenses occured during a care schedule recorded by a hcw
+Table Expenses {
+  expense_id int [pk, increment]
+  patient_id int [not null, ref: > Patients.patient_id]
+  hcw_id int [not null, ref: > HealthcareWorkers.hcw_id]
+  schedule_id INT [not null, ref: > CareSchedules.schedule_id]
+  expense_date date
+  expense_description varchar
+  payment_method enum('cash', 'debit', 'credit', 'direct deposit', 'digital wallet', 'cheque')
+  expense_type enum('groceries', 'medical', 'personal prediction equipment', 'supplies', 'parking',
+                    'travel_related', 'meals', 'incidental expenses', 'entertainment', 'other')
+  amount decimal(10, 2)
+  attachements varchar
+  description text
+  status enum('pending', 'approved', 'rejected')
+  created_at timestamp
+}
+
+Table UserTransactions {
+  transaction_id int [pk, increment] // Unique transaction ID
+  wallet_id int [not null, ref: > UserWallet.wallet_id] // Links to wallet
+  recorded_by int [ref: > HealthcareWorkers.hcw_id] // Who logged the expense (optional)
+  job_id int [ref: > Jobs.job_id] // If expense is job-related
+  transaction_type enum("Expense", "Deposit", "Refund", "Adjustment", 'invoice payment') // Type of transaction
+  category enum("HCW Service", "Medical Supply", "Transportation", "Other") // Type of expense
+  amount decimal(10,2) [not null] // Expense or deposit amount
+  payment_method enum("Cash", "Credit Card", "Insurance", "Wallet Deduction") // How was it paid?
+  status enum("Pending", "Completed", "Reversed", 'declined') [default: "Completed"] // Status of the transaction
+  created_at timestamp // When the transaction was recorded
+  notes text // Additional details
+}
+
+// pay stubs generated by a user for a hcw for a care schedule
+Table UserGeneratedPaystubs {
+  paystub_id INT [pk, increment]
+  schedule_id INT [not null, ref: > CareSchedules.schedule_id]
+  hcw_id INT [not null, ref: > HealthcareWorkers.hcw_id]
+  period_start DATE
+  period_end DATE
+  total_hours DECIMAL(5,2)
+  total_pay DECIMAL(10,2)
+  generated_at TIMESTAMP
 }
 
 // credentials needed for the job
@@ -399,6 +600,49 @@ Table JobLanguages {
     hcw_id int [not null, ref: > HealthcareWorkers.hcw_id]
 }
 
+// historical data for building patient profiles for later
+Table PatientPrefLanguages {
+    patientpreflanguages_id int [pk, increment]
+    language_id int [not null, ref: > Languages.language_id]
+    patient_id int [not null, ref: > Patients.patient_id]
+}
+
+// historical data for building user profiles for later use
+Table UserPrefLanguages {
+    userpreflanguages_id int [pk, increment]
+    language_id int [not null, ref: > Languages.language_id]
+    user_id int [not null, ref: > Users.user_id]
+}
+
+// historical info for building patient profiles for later use
+Table PatientPrefSkills {
+    patientprefskills_id int [pk, increment]
+    skill_id int [not null, ref: > Skills.skill_id]
+    patient_id int [not null, ref: > Patients.patient_id]
+}
+
+// historical info for building user profiles for later use
+Table UserPrefSkills {
+    userprefskills_id int [pk, increment]
+    skill_id int [not null, ref: > Skills.skill_id]
+    user_id int [not null, ref: > Users.user_id]
+}
+
+// historical info for building patient profiles for later use
+Table PatientPrefCredentials {
+    patientprefcredentials_id int [pk, increment]
+    credentials_id int [not null, ref: > Credentials.credential_id]
+    patient_id int [not null, ref: > Patients.patient_id]
+}
+
+// historical info for building user profiles for later use
+Table UserPrefCredentials {
+    userprefcredentials_id int [pk, increment]
+    credentials_id int [not null, ref: > Credentials.credential_id]
+    user_id int [not null, ref: > Users.user_id]
+}
+
+
 // info for child care activities
 Table ChildCareActivity {
     childcareactivity_id int [pk, increment]
@@ -429,11 +673,47 @@ Table JobAdultCareActivity {
     notes text
 }
 
-
+// care plan for a specific job, patient
 Table CarePlan {
   careplan_id int [pk, increment]
-  patient_id int [ref: > Patients.patient_id]
-  job_id int [ref: > Jobs.job_id]
+  patient_id int [not null, ref: > Patients.patient_id]
+  job_id int [not null, ref: > Jobs.job_id]
+  description text
+  start_date date
+  end_date date
+  created_at timestamp
+  updated_at timestamp
+}
+
+// care team assigned for the care plan
+Table CarePlanCareTeam {
+  careteam_id int [pk, increment]
+  careplan_id int [not null, ref: > CarePlan.careplan_id]
+  hcw_id int [not null, ref: > HealthcareWorkers.hcw_id]
+  role enum("Primary Caregiver", "Secondary Caregiver", "Support Worker", "Therapist", "Nurse", "Physician", "Specialist", "Other")
+}
+
+// chartting for care plans for a patient during a job
+Table CarePlanChartting {
+  chart_id int [primary key, increment] // Unique chart entry ID
+  patient_id int [not null, ref: > Patients.patient_id]
+  hcw_id int [not null, ref: > HealthcareWorkers.hcw_id]
+  care_plan_id int [not null, ref: > CarePlans.care_plan_id]
+  chart_date timestamp [default: current_timestamp]
+  vital_signs json
+  medications_administered json
+  daily_care_activities text
+  symptoms_observed text
+  meal_intake text
+  bowel_bladder text
+  wound_care text
+  mood_behavior text
+  emergency_situations text
+  additional_notes text
+  attachments json
+  signature varchar(255)
+  created_at timestamp
+  updated_at timestamp
 }
 
 // Join table for the many-to-many relationship
@@ -457,37 +737,6 @@ Table job_personal_interests {
   primary key (job_id, interest_id) // Composite primary key
 }
 
-Table JobApplications {
-  application_id int [pk, increment] // Unique application ID
-  job_id int [not null, ref: > Jobs.job_id] // Job being applied to
-  hcw_id int [not null, ref: > HealthcareWorkers.hcw_id] // HCW applying
-  status enum("Pending", "Accepted", "Rejected", "Interview", "Shortlisted", "meet&greet", "Hired")
-  applied_at timestamp // Timestamp when application was submitted
-  resume_link varchar // Optional: link to resume or CV
-  cover_letter text // Optional: cover letter
-}
-
-Table ApplicationDocuments {
-  document_id int [pk, increment] // Unique document ID
-  application_id int [not null, ref: > JobApplications.application_id] // Links to the job application
-  document_type enum("Resume", "Certification", "Reference", "Other") // Type of document
-  file_url varchar // Storage path or URL of the file
-  uploaded_at timestamp // Timestamp when document was uploaded
-}
-
-Table PersonalInterests {
-  id int [pk, increment] // Unique identifier for each credential
-  name varchar // Name of the credential (e.g., "Registered Nurse")
-  description text // Optional: A detailed description of the interest
-}
-
-
-Table Credentials {
-  credential_id int [pk, increment] // Unique identifier for each credential
-  name varchar // Name of the credential (e.g., "Registered Nurse")
-  description text // Optional: A detailed description of the credential
-  is_active boolean // Optional: Indicates whether the credential is currently valid for assignment
-}
 
 Table HealthcareWorkers {
   hcw_id int [pk, increment] // Unique identifier for each HCW
@@ -496,29 +745,25 @@ Table HealthcareWorkers {
   middle_name varchar(100) [null]
   business_name varchar(255) [null]
   legal_name varchar(255) [null]
+  email varchar(255) [unique, not null]
+  apple_email varchar(255) [unique, null]
+  google_email varchar(255) [unique, null]
+  facebook_id varchar(255) [unique, null]
+  hashed_password varchar(255) [not null]
   date_of_birth date
   sin_ssn varchar(20) [unique]
   gender enum("Male", "Female", "Other")
-  contact_info varchar // Optional: email, phone number, etc.
-  hire_date date // Optional: Date the worker was hired
-  ethnicity int [ref: > Ethnicities.ethnicity_id] // Foreign key to Ethnicities table
-  pay_period_schedule enum("Bi-Weekly (26/year)", "Bi-Weekly (27/year)", "Manual", "Monthly (12/year)", "Semi-Monthly Non-Standard", "Weekly")
-  permission_group enum("Regular Employee (Punch In/Out)", "Admin", "Manager") // Access control
+  contact_info varchar(255) [not null]
+  ethnicity int [ref: > Ethnicities.ethnicity_id]
   status enum("Active", "Inactive (Temporary)", "Leave - Illness/Injury", "Leave - Maternity/Parental", "Leave - Other", "Terminated/Quit")
-  policy_group enum("Webookcare App Healthcare Workers") // Fixed policy group for now
-  salary_type enum("Hourly", "Salary (Weekly)", "Salary (Bi-Weekly)", "Salary (Monthly)", "Salary (Annual)")
   hourly_rate decimal(10,2) [null] // If applicable
+  profile_picture varchar(255) [null]
   created_at timestamp
   updated_at timestamp
+  notes text
 }
 
-// hcw types
-Table HealthcareWorkerTypes {
-    healthcareworkertypes_id int [pk, increment]
-    hcw_id int [ref: > HealthcareWorkers.hcw_id]
-}
-
-Table HealthcareWorkerAddress {
+Table HealthcareWorkersAddress {
   address_id int [pk, increment] // Unique Address ID
   hcw_id int [not null, ref: > HealthcareWorkers.hcw_id] // Foreign key to HCW
   unit_no varchar(50) [null] // Optional
@@ -531,6 +776,29 @@ Table HealthcareWorkerAddress {
   updated_at timestamp
 }
 
+// hcw types
+Table HealthcareWorkerTypes {
+    healthcareworkertypes_id int [pk, increment]
+    hcw_id int [ref: > HealthcareWorkers.hcw_id]
+}
+
+// positions vocab for HCWs
+Table HealthcareWorkerPositions {
+    healthcareworkerposition_id int [pk, increment]
+    position varchar(100)
+}
+
+// historical info for HCW positions
+Table HealthcareWorkerPositionsInfo {
+    healthcareworkerpositionsinfo_id int [pk, increment]
+    hcw_id int [not null, ref: > HealthcareWorkers.hcw_id]
+    healthcareworkerposition_id int [ref: > HealthcareWorkerPositions.healthcareworkerposition_id]
+    start_date date
+    end_date date
+    notes text
+}
+
+// contacts info for HCWs
 Table HealthcareWorkerContacts {
   contact_id int [pk, increment]
   hcw_id int [not null, ref: > HealthcareWorkers.hcw_id] // Foreign key to HCW
@@ -562,7 +830,7 @@ Table Tags {
   name varchar(255) [unique]
 }
 
-Table HCWCredentials {
+Table HealthcareWorkerCredentials {
   id int [pk, increment] // Unique identifier for each worker-credential link
   worker_id int [ref: > HealthcareWorkers.hcw_id] // Foreign key to healthcare workers table
   credential_id int [ref: > credentials.id] // Foreign key to credentials table
@@ -579,83 +847,55 @@ Table Services {
   is_active boolean // Optional: Indicates whether the credential is currently valid for assignment
 }
 
-Table HCWServices {
+Table HealthcareWorkerServices {
   id int [pk, increment] // Unique identifier for each worker-credential link
   worker_id int [ref: > HealthcareWorkers.hcw_id] // Foreign key to healthcare workers table
   service_id int [ref: > Services.id] // Foreign key to credentials table
 }
 
-Table PaymentSchedules {
-  paymentschedule_id int [pk, increment]
-  worker_id int [ref: > HealthcareWorkers.hcw_id]
-  job_id int [ref: > Jobs.job_id]
-  patient_id int [ref: > Patients.patient_id]
-  timezone varchar
-  date_format varchar
-  time_format varchar
-  calendar_start_day enum('sat', 'sun', 'mon', 'tue', 'wed', 'thu', 'fri')
-  pay_period_frequency enum('weekly (52/year)', 'bi-weekly (26/year)', 'semi-monthly (26/year)', 'monthly (12/year)', 'weekly (53/year)', 'bi-weekly (27/year)')
-  start_date date
-  end_date date
-  transaction_date date
+// Tracks HCWs' historical job info (only if hired)
+Table HealthcareWorkerJobs {
+  hcwjob_id int [pk, increment] // Unique record ID
+  hcw_id int [not null, ref: > HealthcareWorkers.hcw_id] // HCW assigned
+  job_id int [not null, ref: > Jobs.job_id] // Job reference
+  status enum('active', 'completed', 'terminated', 'resigned') // Post-hiring statuses
+  hired_at timestamp [not null] // When HCW was hired
+  start_date date [not null] // Job start date
+  end_date date // Job end date (if applicable)
+  created_at timestamp [default: current_timestamp] // Record creation time
+  updated_at timestamp [default: current_timestamp] // Last update time
 }
 
-Table UserWallet {
-  wallet_id int [pk, increment]
-  user_id int [not null, ref: > Users.user_id]
-  balance decimal(10, 2)
-  last_updated timestamp
-  //payment_methods enum('stripe')
-  //paystubs varchar
-  //expenses
-  //invoice_id
+// Tracks applications submitted by HCWs
+Table HealthcareWorkerJobApplications {
+  application_id int [pk, increment] // Unique application ID
+  job_id int [not null, ref: > Jobs.job_id] // Job being applied to
+  hcw_id int [not null, ref: > HealthcareWorkers.hcw_id] // HCW applying
+  status enum("Pending", "Shortlisted", "Interview", "Meet & Greet", "Hired", "Rejected") 
+  applied_at timestamp [default: current_timestamp] // Timestamp when application was submitted
+  hired_at timestamp // Filled only when status = "Hired"
+  resume_link varchar // Optional: link to resume or CV
+  cover_letter text // Optional: cover letter
+  created_at timestamp [default: current_timestamp] // Record creation time
+  updated_at timestamp [default: current_timestamp] // Last update time
 }
 
-Table UserInvoice {
-  invoice_id int [pk, increment]
-  user_id int [ref: > Users.user_id]
-  invoice_start_date date
-  invoice_end_date date
+Table ApplicationDocuments {
+  document_id int [pk, increment] // Unique document ID
+  application_id int [not null, ref: > JobApplications.application_id] // Links to the job application
+  document_type enum("Resume", "Certification", "Reference", "Other") // Type of document
+  file_url varchar // Storage path or URL of the file
+  uploaded_at timestamp // Timestamp when document was uploaded
 }
 
-Table UserPayment {
-  payment_id int [pk, increment]
-  invoice_id int [ref: > UserInvoice.invoice_id]
-  wallet_id int [ref: > UserWallet.wallet_id]
-  paymentschedule_id int [ref: > PaymentSchedules.paymentschedule_id]
-  done_at timestamp
-  payment_date date
-  payment_method enum('credit', 'debit')
+
+Table Credentials {
+  credential_id int [pk, increment] // Unique identifier for each credential
+  name varchar // Name of the credential (e.g., "Registered Nurse")
+  description text // Optional: A detailed description of the credential
+  is_active boolean // Optional: Indicates whether the credential is currently valid for assignment
 }
 
-/*
-Table Expenses {
-  expense_id int [pk, increment]
-  user_id int [ref: > Users.user_id]
-  hcw_id int [ref: > HealthcareWorkers.hcw_id]
-  expense_date date
-  expense_description varchar
-  payment_method enum('cash', 'debit', 'credit', 'direct deposit', 'digital wallet', 'cheque')
-  expense_type enum('groceries', 'medical', 'personal prediction equipment', 'supplies', 'parking',
-                    'travel_related', 'meals', 'incidental expenses', 'entertainment', 'other')
-  amount float
-  attachements varchar
-}
-*/
-
-Table WalletTransactions {
-  transaction_id int [pk, increment] // Unique transaction ID
-  wallet_id int [not null, ref: > UserWallet.wallet_id] // Links to wallet
-  recorded_by int [ref: > HealthcareWorkers.hcw_id] // Who logged the expense (optional)
-  job_id int [ref: > Jobs.job_id] // If expense is job-related
-  transaction_type enum("Expense", "Deposit", "Refund", "Adjustment") // Type of transaction
-  category enum("HCW Service", "Medical Supply", "Transportation", "Other") // Type of expense
-  amount decimal(10,2) [not null] // Expense or deposit amount
-  payment_method enum("Cash", "Credit Card", "Insurance", "Wallet Deduction") // How was it paid?
-  status enum("Pending", "Completed", "Reversed") [default: "Completed"] // Status of the transaction
-  created_at timestamp // When the transaction was recorded
-  notes text // Additional details
-}
 
 
 
