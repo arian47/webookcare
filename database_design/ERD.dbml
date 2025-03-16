@@ -1,13 +1,14 @@
+// TAGS allows to track each table info for further improvements and against the original design
 
-// ACCORDING TO FIGMA DESIGN SECTION
 
+// TAGS: INCLUDED_V2
 // Main users table - stores core information about individuals and companies managing patients
 Table users {
   id              int [pk, increment]
   first_name      varchar(100) [not null]
   last_name       varchar(100) [not null]
   middle_name     varchar(100) [null]
-  date_of_birth   date [not null] // Age can be calculated from date_of_birth
+  date_of_birth   date [not null]
   phone_number    varchar(20) [unique, not null] // Primary contact number
   phone_verified  boolean [default: false] // Whether phone number is verified
   email           varchar(255) [unique, not null] // Primary email
@@ -16,12 +17,12 @@ Table users {
   wallet_id       int [null, ref: > user_wallets.id] // Reference to user's digital wallet
   referral_code   varchar [null] // Code used for referral program
   business_name   varchar(255) [null] // For business/company accounts
-  legal_name      varchar(255) [null] // Legal business name if different
-  failed_attempts int [default: 0] // Track failed login attempts for security
+  legal_name      varchar(255) [null] // Legal business name
+  failed_attempts int [default: 0] // Track failed login attempts
   is_locked       boolean [default: false] // Account gets locked after too many failed attempts
   created_at      timestamp [default: now()]
   updated_at      timestamp [default: now()]
-  deleted_at      timestamp [null] // Soft delete support
+  deleted_at      timestamp [null]
 
   indexes {
     (first_name, last_name)
@@ -31,6 +32,7 @@ Table users {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Secondary email addresses for users
 Table user_emails {
   id         int [pk, increment]
@@ -40,12 +42,33 @@ Table user_emails {
   verified   boolean [default: false]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
+  deleted_at      timestamp [null]
 
   indexes {
     (user_id, email) [unique]
   }
 }
 
+// TAGS: INCLUDED_V2 TO_BE_REVIEWED
+// secondary contact details for the users
+Table user_contacts {
+  id int [pk, increment]
+  user_id int [not null, ref: > patients.id]
+  phone_number varchar(20) [null]
+  is_primary boolean [default: false]
+  contact_type enum("emergency", "work") [not null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
+
+  indexes {
+    user_id
+    contact_type
+    (email_address, phone_number)
+  }
+}
+
+// TAGS: INCLUDED_V2
 // Phone verification codes
 Table user_phone_verification_codes {
   id            int [pk, increment]
@@ -66,12 +89,13 @@ Table user_phone_verification_codes {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Supported authentication methods/providers
 Table auth_providers {
   id int [pk, increment]
   provider enum("email", "apple", "google", "facebook", "microsoft", "twitter", "linkedin", "github", "phone") [not null]
   display_name varchar(100) [not null] // Friendly name for display
-  is_active boolean [default: true] // Allows disabling specific providers
+  is_active boolean [default: true]
   client_id varchar(255) [null] // OAuth client ID if applicable
   client_secret varchar(255) [null] // OAuth client secret if applicable 
   created_at timestamp [default: now()]
@@ -83,6 +107,7 @@ Table auth_providers {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Links users to their authentication methods
 Table user_auth {
   id int [pk, increment]
@@ -108,6 +133,7 @@ Table user_auth {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Additional user information and preferences
 // TODO: check with design and possible duplicates
 Table user_profiles {
@@ -126,7 +152,7 @@ Table user_profiles {
 }
 
 
-
+// TAGS: INCLUDED_V2
 // Password reset management
 Table password_resets {
   id            int [pk, increment]
@@ -146,6 +172,7 @@ Table password_resets {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Security audit trail
 Table security_logs {
   id            int [pk, increment] 
@@ -168,6 +195,7 @@ Table security_logs {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Session management
 Table user_sessions {
   id            int [pk, increment]
@@ -191,6 +219,7 @@ Table user_sessions {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Device tracking for security
 Table user_devices {
   id            int [pk, increment]
@@ -217,6 +246,7 @@ Table user_devices {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Login statistics
 Table login_stats {
   id                int [pk, increment]
@@ -235,6 +265,7 @@ Table login_stats {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Platform usage statistics
 Table platform_stats {
   id              int [pk, increment]
@@ -249,6 +280,7 @@ Table platform_stats {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Geographic service availability tracking
 Table service_regions {
   id int [pk, increment]
@@ -274,6 +306,7 @@ Table service_regions {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Regional service demand tracking
 Table service_region_demand {
   id int [pk, increment] 
@@ -294,6 +327,7 @@ Table service_region_demand {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Service availability waitlist
 Table service_waitlist {
   id int [pk, increment]
@@ -317,6 +351,7 @@ Table service_waitlist {
   }
 }
 
+// TAGS: INCLUDED_V2 SECURITY
 // Phone number verification system
 Table user_phone_verifications {
   id                int [pk, increment]
@@ -333,6 +368,7 @@ Table user_phone_verifications {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Customer support contact information
 Table support_contacts {
   id            int [pk, increment]
@@ -348,6 +384,7 @@ Table support_contacts {
   }
 }
 
+// TAGS: INCLUDED_V2 HISTORICAL_DATA IMPROVEMENT_REQUIRED
 // user address info
 Table user_addresses {
   id int [pk, increment]
@@ -357,11 +394,25 @@ Table user_addresses {
   city varchar(100) [not null]
   province varchar(100) [not null]
   postal_code varchar(20) [not null]
-  country varchar(100) [not null]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
+  country varchar(100) [not null, default: "CA"]
+  is_primary boolean [default: false] // Whether this is the user's primary address
+  address_type enum("home", "work", "billing", "shipping", "other") [not null]
+  latitude decimal(10,8) [null] 
+  longitude decimal(11,8) [null]
+  deleted_at timestamp [null] // Soft delete
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+
+  indexes {
+    user_id
+    postal_code
+    is_primary
+    (city, province, country)
+    deleted_at
+  }
 }
 
+// TAGS: INCLUDED_V2 TO_BE_REVIEWED
 // subscriptions info
 Table subscriptions {
   id int [pk, increment]
@@ -369,26 +420,47 @@ Table subscriptions {
   description text [null]
   price decimal(10, 2) [not null]
   duration enum('monthly', 'yearly') [not null]
-  created_at timestamp [not null]
   notes text [null] // any additional info
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
+// TAGS: INCLUDED_V2 HISTORICAL_DATA TO_BE_REVIEWED
 // user subscriptions historical info
 Table user_subscriptions {
   id int [pk, increment]
   user_id int [not null, ref: > users.id]
   subscription_id int [not null, ref: > subscriptions.id]
   start_date date [not null]
-  end_date date [null]
-  status enum('active', 'inactive', 'cancelled') [not null]
-  created_at timestamp [not null]
+  end_date date [not null]
+  status enum('active', 'inactive', 'cancelled', 'pending', 'suspended') [not null]
+  auto_renew boolean [default: true]
+  payment_status enum('paid', 'pending', 'failed', 'refunded') [not null]
+  cancellation_reason text [null]
+  trial_end_date date [null]
+  next_billing_date date [null]
+  assigned_at timestamp [default: now()]
+  cancelled_at timestamp [null]
+  updated_at timestamp [default: now()]
+  deleted_at timestamp [null] // For soft deletes
+
+  indexes {
+    (user_id, subscription_id)
+    status
+    payment_status
+    start_date
+    end_date
+    next_billing_date
+    deleted_at
+  }
 }
 
+// TAGS: INCLUDED_V2 HISTORICAL_DATA
 // storing basic info like name, email, user managing patients treatments, age, dob, gender
 // other notes, address, 
 Table patients {
   id integer [pk, increment]
-  user_id int [not null, ref: > users.id]
+  user_id int [not null, ref: > users.id] // user managing the patient
   email varchar(255) [unique, not null]
   first_name varchar(100) [not null]
   last_name varchar(100) [not null]
@@ -410,6 +482,7 @@ Table patients {
   }
 }
 
+// TAGS: INCLUDED_V2 HISTORICAL_DATA
 // Patient addresses
 Table patients_addresses {
   id int [pk, increment]
@@ -419,18 +492,26 @@ Table patients_addresses {
   city varchar(100) [not null]
   province varchar(100) [not null]
   postal_code varchar(20) [not null]
-  country varchar(100) [not null]
+  country varchar(100) [not null, default: "CA"]
   is_primary boolean [default: false]
+  address_type enum("home", "work", "other") [not null, default: "home"]
+  latitude decimal(10,8) [null] 
+  longitude decimal(11,8) [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
 
   indexes {
     patient_id
     postal_code
     (city, province, country)
+    is_primary
+    address_type
+    deleted_at
   }
 }
 
+// TAGS: INCLUDED_V2 HISTORICAL_DATA
 // Patient contacts
 Table patients_contacts {
   id int [pk, increment]
@@ -442,6 +523,7 @@ Table patients_contacts {
   relationship varchar(100) [null] // relationship to the user managing the patient
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
 
   indexes {
     patient_id
@@ -450,6 +532,7 @@ Table patients_contacts {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // Patient medications for the care plan
 Table patients_medicines {
   id int [pk, increment]
@@ -475,6 +558,7 @@ Table patients_medicines {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // Patient personal interests
 Table patients_personal_interests {
   id int [pk, increment]
@@ -488,6 +572,7 @@ Table patients_personal_interests {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // Patient mobility challenges
 Table patients_mobility_challenges {
   id int [pk, increment]
@@ -510,6 +595,7 @@ Table patients_mobility_challenges {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // Patient perception communication issues
 Table patients_perception_communication_issues {
   id int [pk, increment]
@@ -531,6 +617,7 @@ Table patients_perception_communication_issues {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // Patient nutritional challenges
 Table patients_nutritional_challenges {
   id int [pk, increment]
@@ -554,6 +641,7 @@ Table patients_nutritional_challenges {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // Patient moods
 Table patients_moods {
   id int [pk, increment]
@@ -576,6 +664,7 @@ updated_at timestamp [default: now()]
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // Patient health conditions
 Table patients_health_conditions {
   id int [pk, increment]
@@ -601,6 +690,7 @@ Table patients_health_conditions {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // Patient cognition
 Table patients_cognition {
   id int [pk, increment]
@@ -623,6 +713,7 @@ Table patients_cognition {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // Patient allergies
 Table patients_allergies {
   id int [pk, increment]
@@ -644,6 +735,7 @@ Table patients_allergies {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // Patient diagnoses
 Table patients_diagnoses {
   id int [pk, increment]
@@ -666,6 +758,7 @@ Table patients_diagnoses {
   }
 }
 
+// TAGS: INCLUDED_V2
 // terms used for medicine
 Table medicines {
   id int [pk, increment]
@@ -673,6 +766,7 @@ Table medicines {
   description text [null]
 }
 
+// TAGS: INCLUDED_V2
 // personal interests terms
 Table personal_interests {
   id int [pk, increment]
@@ -680,12 +774,14 @@ Table personal_interests {
   description text [null]
 }
 
+// TAGS: INCLUDED_V2
 Table healthcare_workers_personal_interests {
   id int [pk, increment]
   hcw_id int [not null, ref: > healthcare_workers.id]
   interest_id int [not null, ref: > personal_interests.id]
 }
 
+// TAGS: INCLUDED_V2
 // table for holding terms for mobility challenges care is provided for
 Table mobility_challenges {
   id int [pk, increment]
@@ -693,6 +789,7 @@ Table mobility_challenges {
   description text [null]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // info about mobility challenges managed by a user or company possible marketing purposes later
 Table user_managed_mobility_challenges {
   id int [pk, increment]
@@ -702,6 +799,7 @@ Table user_managed_mobility_challenges {
   description text [null]
 }
 
+// TAGS: INCLUDED_V2
 // perception communication issues a vocabulary for holding info about care activities
 Table perception_communication_issues {
   id int [pk, increment]
@@ -709,6 +807,7 @@ Table perception_communication_issues {
   description text [null]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // perception communication issues recorded for a patient
 Table patients_perception_communication_issues {
   id int [pk, increment]
@@ -721,6 +820,7 @@ Table patients_perception_communication_issues {
   description text [null]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // info about perception communication issues managed by a user or company possible marketing purposes later
 Table user_managed_perception_communication_issues {
   id int [pk, increment]
@@ -730,6 +830,7 @@ Table user_managed_perception_communication_issues {
   description text [null]
 }
 
+// TAGS: INCLUDED_V2
 // holding info for terms for nutritional challenges
 Table nutritional_challenges {
   id int [pk, increment]
@@ -737,6 +838,7 @@ Table nutritional_challenges {
   notes text [null]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // info about nutritional challenges managed by a user or company possible marketing purposes later
 Table user_managed_nutritional_challenges {
   id int [pk, increment]
@@ -746,6 +848,7 @@ Table user_managed_nutritional_challenges {
   notes text [null]
 }
 
+// TAGS: INCLUDED_V2
 // mood states terms info
 Table moods {
   id int [pk, increment]
@@ -753,6 +856,7 @@ Table moods {
   description text [null]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // info about patient moods states managed by a user or company possible marketing purposes later
 Table user_managed_moods {
   id int [pk, increment]
@@ -762,6 +866,7 @@ Table user_managed_moods {
   notes text [null]
 }
 
+// TAGS: INCLUDED_V2
 // info about health conditions terms for care
 Table health_conditions {
   id int [pk, increment]
@@ -769,6 +874,7 @@ Table health_conditions {
   description text [null]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // info about health conditions managed by a user or company possible marketing purposes later
 Table user_managed_health_conditions {
   id int [pk, increment]
@@ -778,6 +884,7 @@ Table user_managed_health_conditions {
   assigned_at timestamp [not null]
 }
 
+// TAGS: INCLUDED_V2
 // terms for cognition states
 Table cognition_states {
   id int [pk, increment]
@@ -785,6 +892,7 @@ Table cognition_states {
   description text [null]
 }
 
+// TAGS: INCLUDED_V2
 // terms for allergies 
 Table allergies {
   id int [pk, increment]
@@ -792,6 +900,7 @@ Table allergies {
   description text [null]
 }
 
+// TAGS: INCLUDED_V2
 // diagnosis terms and conditions info
 Table diagnoses {
   id int [pk, increment]
@@ -799,6 +908,7 @@ Table diagnoses {
   description text [null]
 }
 
+// TAGS: INCLUDED_V2
 // types of property info
 Table property_types {
   id int [pk, increment]
@@ -807,6 +917,7 @@ Table property_types {
   created_at timestamp [not null]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // info about patients property types
 Table patients_property_types {
   id int [pk, increment]
@@ -817,6 +928,7 @@ Table patients_property_types {
   notes text [null]
 }
 
+// TAGS: INCLUDED_V2
 // info about property types managed by a user or company possible marketing purposes later
 Table user_managed_property_types {
   id int [pk, increment]
@@ -825,6 +937,7 @@ Table user_managed_property_types {
   created_at timestamp [not null]
 }
 
+// TAGS: INCLUDED_V2
 // different caresettings info
 Table care_settings {
   id int [pk, increment]
@@ -833,6 +946,7 @@ Table care_settings {
   created_at timestamp [not null]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // info about patients care setting
 Table patients_care_settings {
   id int [pk, increment]
@@ -842,6 +956,7 @@ Table patients_care_settings {
   assigned_at timestamp [not null]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // info about care settings managed by a user or company possible marketing purposes later
 Table user_managed_care_settings {
   id int [pk, increment]
@@ -850,6 +965,7 @@ Table user_managed_care_settings {
   created_at timestamp [not null]
 }
 
+// TAGS: INCLUDED_V2
 // care settings HCW preferrs working in
 Table healthcare_workers_preferred_care_settings {
   id int [pk, increment]
@@ -858,6 +974,7 @@ Table healthcare_workers_preferred_care_settings {
   assigned_at timestamp [not null]
 }
 
+// TAGS: INCLUDED_V2
 // types of jobs i.e. "employment", "independent contractor", "volunteer", "sponsorship"
 Table job_types {
   id int [pk, increment]
@@ -868,6 +985,7 @@ Table job_types {
   deleted_at timestamp [null]
 }
 
+// TAGS: INCLUDED_V2
 // job types preferrence for HCWs
 Table healthcare_workers_preferred_jobs {
   id int [pk, increment]
@@ -880,7 +998,7 @@ Table healthcare_workers_preferred_jobs {
 }
 
 
-
+// TAGS: INCLUDED_V2
 // Payment schedules
 // consider transaction_date date [null]
 // consdier naming change pay_period_frequency
@@ -910,6 +1028,7 @@ Table payment_schedules {
   }
 }
 
+// TAGS: INCLUDED_V2
 // User wallets
 Table users_wallets {
   id int [pk, increment]
@@ -931,6 +1050,7 @@ Table users_wallets {
   //invoice_id
 }
 
+// TAGS: INCLUDED_V2
 // User invoices
 Table users_invoices {
   id int [pk, increment]
@@ -958,6 +1078,7 @@ Table users_invoices {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Invoice items
 Table invoices_items {
   id int [pk, increment]
@@ -980,6 +1101,7 @@ Table invoices_items {
 //  payment_method enum('credit', 'debit')
 //}
 
+// TAGS: INCLUDED_V2 DUPLICATED
 // credentials needed for the job
 Table job_credentials {
     id int [pk, increment]
@@ -987,6 +1109,7 @@ Table job_credentials {
     job_id int [not null, ref: > jobs.id]
 }
 
+// TAGS: INCLUDED_V2
 // Expenses
 Table expenses {
   id int [pk, increment]
@@ -1017,6 +1140,7 @@ Table expenses {
   }
 }
 
+// TAGS: INCLUDED_V2
 // probably wrong we don't want to store same info as Expenses
 Table users_transactions {
   id int [pk, increment]
@@ -1032,6 +1156,7 @@ Table users_transactions {
   notes text [null]
 }
 
+// TAGS: INCLUDED_V2
 // Payment methods
 Table payment_methods {
   id int [pk, increment]
@@ -1053,6 +1178,7 @@ Table payment_methods {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Generated pay stubs
 Table pay_stubs_generated {
   id int [pk, increment]
@@ -1084,6 +1210,7 @@ Table pay_stubs_generated {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Job messages
 // fix this
 Table job_messages {
@@ -1110,6 +1237,7 @@ Table job_messages {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare workers base table
 Table healthcare_workers {
   id int [pk, increment]
@@ -1150,6 +1278,7 @@ Table healthcare_workers {
   }
 }
 
+// TAGS: INCLUDED_V2 DUPLICATED
 // Healthcare worker rates
 Table healthcare_worker_rates {
   id int [pk, increment]
@@ -1169,6 +1298,7 @@ Table healthcare_worker_rates {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare worker expertise
 Table healthcare_worker_expertise {
   id int [pk, increment]
@@ -1177,6 +1307,7 @@ Table healthcare_worker_expertise {
   created_at timestamp [default: now()]
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare worker expertise assignments
 Table healthcare_worker_expertise_assignments {
   id int [pk, increment]
@@ -1191,6 +1322,7 @@ Table healthcare_worker_expertise_assignments {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare worker shifts
 Table healthcare_workers_shifts {
   id int [pk, increment]
@@ -1199,8 +1331,9 @@ Table healthcare_workers_shifts {
   created_at timestamp [default: now()]
 }
 
+// TAGS: INCLUDED_V2 DUPLICATED
 // Healthcare worker shift preferences
-Table healthcare_workers_shift_preferences {
+Table healthcare_workers_preferred_shifts {
   id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
   shift_id int [not null, ref: > healthcare_workers_shifts.id]
@@ -1211,6 +1344,7 @@ Table healthcare_workers_shift_preferences {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare worker schedules
 Table healthcare_workers_schedules {
   id int [pk, increment]
@@ -1219,8 +1353,9 @@ Table healthcare_workers_schedules {
   created_at timestamp [default: now()]
 }
 
+// TAGS: INCLUDED_V2 DUPLICATED
 // Healthcare worker schedule preferences
-Table healthcare_workers_schedule_preferences {
+Table healthcare_workers_preferred_schedules {
   id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
   schedule_id int [not null, ref: > healthcare_workers_schedules.id]
@@ -1234,6 +1369,7 @@ Table healthcare_workers_schedule_preferences {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare worker addresses
 Table healthcare_workers_addresses {
   id int [pk, increment]
@@ -1255,6 +1391,7 @@ Table healthcare_workers_addresses {
   }
 }
 
+// TAGS: INCLUDED_V2 DUPLICATED
 // Healthcare worker categories
 Table healthcare_workers_categories {
   id int [pk, increment]
@@ -1263,6 +1400,7 @@ Table healthcare_workers_categories {
   created_at timestamp [default: now()]
 }
 
+// TAGS: INCLUDED_V2 DUPLICATED
 // Healthcare worker category assignments
 Table healthcare_workers_category_assignments {
   id int [pk, increment]
@@ -1275,6 +1413,7 @@ Table healthcare_workers_category_assignments {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare worker contacts
 Table healthcare_workers_contacts {
   id int [pk, increment]
@@ -1302,6 +1441,7 @@ Table healthcare_workers_contacts {
   }
 }
 
+// TAGS: INCLUDED_V2 DUPLICATED
 // Healthcare worker credentials
 Table healthcare_workers_credentials {
   id int [pk, increment]
@@ -1324,11 +1464,12 @@ Table healthcare_workers_credentials {
   }
 }
 
+// TAGS: INCLUDED_V2 DUPLICATED
 // Healthcare worker services
 Table healthcare_workers_services {
   id int [pk, increment]
-  worker_id int [not null, ref: > healthcare_workers.id]
   service_id int [not null, ref: > services.id]
+  worker_id int [not null, ref: > healthcare_workers.id]
   created_at timestamp [default: now()]
 
   indexes {
@@ -1336,11 +1477,12 @@ Table healthcare_workers_services {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare worker jobs
 Table healthcare_workers_jobs {
   id int [pk, increment]
-  worker_id int [not null, ref: > healthcare_workers.id]
   job_id int [not null, ref: > jobs.id]
+  worker_id int [not null, ref: > healthcare_workers.id]
   status enum('active', 'completed', 'terminated', 'resigned') [not null]
   hired_at timestamp [null]
   start_date date [not null]
@@ -1356,6 +1498,7 @@ Table healthcare_workers_jobs {
   }
 }
 
+// TAGS: INCLUDED_V2 DUPLICATED
 // Healthcare worker job applications
 Table healthcare_workers_job_applications {
   id int [pk, increment]
@@ -1376,6 +1519,7 @@ Table healthcare_workers_job_applications {
   }
 }
 
+// TAGS: INCLUDED_V2 
 // Ethnicities terms
 Table ethnicities {
   id int [pk, increment]
@@ -1383,33 +1527,44 @@ Table ethnicities {
   description text [null]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 Table healthcare_workers_tags {
+  id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
   tag_id int [not null, ref: > tags.id]
-  primary key (worker_id, tag_id)
 }
 
+// TAGS: INCLUDED_V2
 // Tags terms
 Table tags {
   id int [pk, increment]
   name varchar(255) [not null, unique]
   description text [null]
+  created_at  timestamp [default: now()]
+  updated_at  timestamp [default: now()]
 }
 
+// TAGS: INCLUDED_V2
 // services terms info
 Table services {
   id int [pk, increment]
   name varchar [not null, unique]
   description text [null]
+  created_at  timestamp [default: now()]
+  updated_at  timestamp [default: now()]
 }
 
+// TAGS: INCLUDED_V2
 // skills terms info
 Table skills {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   description text [null]
+  created_at  timestamp [default: now()]
+  updated_at  timestamp [default: now()]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Multi-factor authentication support
 Table mfa_settings {
   id          int [pk, increment]
@@ -1426,6 +1581,7 @@ Table mfa_settings {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // API access management
 Table api_keys {
   id          int [pk, increment]
@@ -1444,6 +1600,7 @@ Table api_keys {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Role-based access control
 Table roles {
   id          int [pk, increment]
@@ -1452,6 +1609,7 @@ Table roles {
   created_at  timestamp [default: now()]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 Table user_roles {
   id         int [pk, increment]
   user_id    int [not null, ref: > users.id]
@@ -1463,6 +1621,7 @@ Table user_roles {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 Table permissions {
   id          int [pk, increment]
   name        varchar(100) [unique, not null]
@@ -1470,6 +1629,7 @@ Table permissions {
   created_at  timestamp [default: now()]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 Table role_permissions {
   role_id       int [not null, ref: > roles.id]
   permission_id int [not null, ref: > permissions.id]
@@ -1480,6 +1640,7 @@ Table role_permissions {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Audit logging
 Table audit_logs {
   id            int [pk, increment]
@@ -1500,6 +1661,7 @@ Table audit_logs {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Rate limiting
 Table rate_limits {
   id            int [pk, increment]
@@ -1515,6 +1677,7 @@ Table rate_limits {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Version control for care plans
 Table care_plan_versions {
   id           int [pk, increment]
@@ -1529,6 +1692,7 @@ Table care_plan_versions {
   }
 }
 
+// TAGS: INCLUDED_V2, DUPLICATED
 // Application documents
 Table application_documents {
   id int [pk, increment]
@@ -1544,6 +1708,7 @@ Table application_documents {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Credentials
 Table credentials {
   id int [pk, increment]
@@ -1553,6 +1718,7 @@ Table credentials {
   updated_at timestamp [default: now()]
 }
 
+// TAGS: INCLUDED_V2
 // Work environment exceptions
 Table work_environment_exceptions {
   id int [pk, increment]
@@ -1561,8 +1727,9 @@ Table work_environment_exceptions {
   created_at timestamp [default: now()]
 }
 
+// TAGS: INCLUDED_V2, DUPLICATED
 // Healthcare worker environment preferences
-Table healthcare_workers_environment_preferences {
+Table healthcare_workers_preferred_environment_exceptions {
   id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
   exception_id int [not null, ref: > work_environment_exceptions.id]
@@ -1573,6 +1740,7 @@ Table healthcare_workers_environment_preferences {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare worker skills
 Table healthcare_workers_skills {
   id int [pk, increment]
@@ -1590,6 +1758,7 @@ Table healthcare_workers_skills {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare worker wallet
 Table healthcare_workers_wallets {
   id int [pk, increment]
@@ -1606,6 +1775,8 @@ Table healthcare_workers_wallets {
   }
 }
 
+// TODO: name change to reviews?
+// TAGS: INCLUDED_V2, DUPLICATED
 // Healthcare worker performance metrics
 Table healthcare_workers_performance_metrics {
   id int [pk, increment]
@@ -1614,6 +1785,8 @@ Table healthcare_workers_performance_metrics {
   created_at timestamp [default: now()]
 }
 
+// TODO: name change to reviews?
+// TAGS: INCLUDED_V2, DUPLICATED
 // Healthcare worker performance records
 Table healthcare_workers_performance_records {
   id int [pk, increment]
@@ -1635,6 +1808,7 @@ Table healthcare_workers_performance_records {
   }
 }
 
+// TAGS: INCLUDED_V2, DUPLICATED
 // Healthcare worker activity logs
 Table healthcare_workers_activity_logs {
   id int [pk, increment]
@@ -1649,6 +1823,7 @@ Table healthcare_workers_activity_logs {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare worker availability
 Table healthcare_workers_availability {
   id int [pk, increment]
@@ -1669,6 +1844,7 @@ Table healthcare_workers_availability {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // Healthcare worker notifications
 Table healthcare_workers_notifications {
   id int [pk, increment]
@@ -1688,6 +1864,7 @@ Table healthcare_workers_notifications {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Care plans - Comprehensive patient care management
 Table care_plans {
   id int [pk, increment]
@@ -1704,6 +1881,7 @@ Table care_plans {
   updated_at timestamp [null]
 }
 
+// TAGS: INCLUDED_V2
 // Care plan team members
 Table care_plan_team_members {
   id int [pk, increment]
@@ -1724,6 +1902,7 @@ Table care_plan_team_members {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Care schedules
 // TODO: check for compaibility with jobs and care plans
 // care schedules associated with a care plan
@@ -1754,6 +1933,7 @@ Table care_schedules {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Jobs
 Table jobs {
   id integer [pk, increment]
@@ -1802,6 +1982,7 @@ Table jobs {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Job credentials required
 Table jobs_required_credentials {
   id int [pk, increment]
@@ -1815,6 +1996,7 @@ Table jobs_required_credentials {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Job services required
 Table jobs_required_services {
   id int [pk, increment]
@@ -1832,8 +2014,9 @@ Table jobs_required_services {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Job work environment exceptions
-Table job_environment_exceptions {
+Table jobs_environment_exceptions {
   id int [pk, increment]
   job_id int [not null, ref: > jobs.id]
   exception_id int [not null, ref: > work_environment_exceptions.id]
@@ -1844,8 +2027,9 @@ Table job_environment_exceptions {
   }
 }
 
+// TAGS: INCLUDED_V2
 // Job required languages
-Table job_required_languages {
+Table jobs_required_languages {
   id int [pk, increment]
   job_id int [not null, ref: > jobs.id]
   language_id int [not null, ref: > languages.id]
@@ -1859,6 +2043,7 @@ Table job_required_languages {
   }
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // TODO: check for duplications
 // historical data for building patient profiles for later
 Table patients_preferred_languages {
@@ -1867,6 +2052,7 @@ Table patients_preferred_languages {
     patient_id int [not null, ref: > patients.id]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // TODO: check for duplications
 // historical data for building user profiles for later use
 Table users_preferred_languages {
@@ -1875,6 +2061,7 @@ Table users_preferred_languages {
     user_id int [not null, ref: > users.id]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // historical info for building patient profiles for later use
 Table patients_preferred_skills {
     id int [pk, increment]
@@ -1882,6 +2069,7 @@ Table patients_preferred_skills {
     patient_id int [not null, ref: > patients.id]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // historical info for building user profiles for later use
 Table users_preferred_skills {
     id int [pk, increment]
@@ -1889,6 +2077,7 @@ Table users_preferred_skills {
     user_id int [not null, ref: > users.id]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // historical info for building patient profiles for later use
 Table patients_preferred_credentials {
     id int [pk, increment]
@@ -1896,6 +2085,7 @@ Table patients_preferred_credentials {
     patient_id int [not null, ref: > patients.id]
 }
 
+// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // historical info for building user profiles for later use
 Table users_preferred_credentials {
     id int [pk, increment]
@@ -1903,6 +2093,7 @@ Table users_preferred_credentials {
     user_id int [not null, ref: > users.id]
 }
 
+// TAGS: INCLUDED_V2
 // info for child care activities
 Table child_care_activities {
     id int [pk, increment]
@@ -1910,6 +2101,7 @@ Table child_care_activities {
     description text [null]
 }
 
+// TAGS: INCLUDED_V2
 // jobs involving child care activities and hcw who did the job
 Table jobs_child_care_activities {
     id int [pk, increment]
@@ -1918,6 +2110,7 @@ Table jobs_child_care_activities {
     notes text [null]
 }
 
+// TAGS: INCLUDED_V2
 // info for adult care activities
 Table adult_care_activities {
     id int [pk, increment]
@@ -1925,6 +2118,7 @@ Table adult_care_activities {
     description text [null]
 }
 
+// TAGS: INCLUDED_V2
 // adult care activities for a specific job
 Table jobs_adult_care_activities {
     id int [pk, increment]
@@ -1933,6 +2127,7 @@ Table jobs_adult_care_activities {
     notes text [null]
 }
 
+// TAGS: INCLUDED_V2
 // care plan for a specific job, patient
 Table care_plans {
   id int [pk, increment]
@@ -1945,6 +2140,7 @@ Table care_plans {
   updated_at timestamp [null]
 }
 
+// TAGS: INCLUDED_V2
 // care team assigned for the care plan
 Table care_plan_care_team {
   id int [pk, increment]
@@ -1954,6 +2150,7 @@ Table care_plan_care_team {
   notes text [null]
 }
 
+// TAGS: INCLUDED_V2
 // chartting for care plans for a patient during a job
 Table care_plan_chartting {
   id int [primary key, increment]
@@ -1963,40 +2160,44 @@ Table care_plan_chartting {
   chart_date timestamp [not null]
   vital_signs json [null]
   medications_administered json [null]
-  daily_care_activities text [null]
-  symptoms_observed text [null]
-  meal_intake text [null]
-  bowel_bladder text [null]
-  wound_care text [null]
-  mood_behavior text [null]
-  emergency_situations text [null]
+  //daily_care_activities text [null]
+  //symptoms_observed text [null]
+  //meal_intake text [null]
+  //bowel_bladder text [null]
+  //wound_care text [null]
+  //mood_behavior text [null]
+  //emergency_situations text [null]
   additional_notes text [null]
   attachments json [null]
   signature varchar(255) [not null]
   updated_at timestamp [null]
 }
 
+// TAGS: INCLUDED_V2, TO_BE_REVIEWED
 // Join table for the many-to-many relationship
 Table jobs_credentials {
+  id int [pk, increment]
   job_id int [not null, ref: > jobs.id]
   credential_id int [not null, ref: > credentials.id]
-  primary key (job_id, credential_id)
 }
 
+// TAGS: INCLUDED_V2, TO_BE_REVIEWED
 // Join table for the many-to-many relationship
 Table jobs_services {
+  id int [pk, increment]
   job_id int [not null, ref: > jobs.id]
   service_id int [not null, ref: > services.id]
-  primary key (job_id, service_id)
 }
 
+// TAGS: TO_BE_REVIEWED
 // Join table for the many-to-many relationship
 Table jobs_personal_interests {
+  id int [pk, increment]
   job_id int [not null, ref: > jobs.id]
   interest_id int [not null, ref: > personal_interests.id]
-  primary key (job_id, interest_id)
 }
 
+// TAGS: INCLUDED_V2
 // base table for healthcare workers info
 Table healthcare_workers {
   id int [pk, increment]
@@ -2021,6 +2222,7 @@ Table healthcare_workers {
   notes text [null]
 }
 
+// TAGS: INCLUDED_V2, TO_BE_REVIEWED
 Table rates {
   id int [pk, increment]
   hcw_id int [not null, ref: > healthcare_workers.id]
@@ -2029,21 +2231,28 @@ Table rates {
   rate decimal(10,2) [not null]
   rate_type enum('hourly', 'daily', 'contract', 'live-in flat daily') [not null]
   effective_date date [not null]
+  assigned_at timestamp [not null]
+  updated_at timestamp [not null]
 }
 
+// TAGS: INCLUDED_V2
 // healthcare worker expertise terms
 Table healthcare_workers_expertises {
   id int [pk, increment]
   name varchar(100) [unique, not null]
+  created_at timestamp [not null]
+  updated_at timestamp [not null]
   description text [null]
 }
 
+// TAGS: INCLUDED_V2
 // Healthcare worker expertise info
 Table healthcare_workers_expertises_info {
   id int [pk, increment]
   hcw_id int [not null, ref: > healthcare_workers.id]
   expertise_id int [not null, ref: > healthcare_workers_expertises.id]
-  assign_date date [not null]
+  assigned_at timestamp [not null]
+  updated_at timestamp [not null]
   notes text [null]
 }
 
