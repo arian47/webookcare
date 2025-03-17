@@ -564,8 +564,9 @@ Table patients_personal_interests {
   id int [pk, increment]
   patient_id int [not null, ref: > patients.id]
   interest_id int [not null, ref: > personal_interests.id]
-  created_at timestamp [default: now()]
   assigned_by int [not null, ref: > users.id]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
   notes text [null]
   indexes {
     (patient_id, interest_id)
@@ -654,7 +655,7 @@ Table patients_moods {
   //recorded_by int [ref: > HealthcareWorkers.hcw_id]  assigned_by int [not null, ref: > users.id]
   notes text [null]
   created_at timestamp [default: now()]
-updated_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
   indexes {
     patient_id
     mood_id
@@ -698,8 +699,8 @@ Table patients_cognition {
   cognition_id int [not null, ref: > cognition_states.id]
   care_plan_id int [not null, ref: > care_plans.id]
   assigned_by int [not null, ref: > users.id]
-  severity enum("mild", "moderate", "severe") [not null]
-  recorded_at timestamp [not null]
+  //severity enum("mild", "moderate", "severe") [not null]
+  //recorded_at timestamp [not null]
   notes text [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
@@ -720,9 +721,9 @@ Table patients_allergies {
   patient_id int [not null, ref: > patients.id]
   allergy_id int [not null, ref: > allergies.id]
   care_plan_id int [not null, ref: > care_plans.id]
+  assigned_by int [not null, ref: > users.id]
   //severity enum("mild", "moderate", "severe") [not null]
   //reaction_type text [null]
-  assigned_by int [not null, ref: > users.id]
   //assigned_at timestamp [not null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
@@ -742,9 +743,9 @@ Table patients_diagnoses {
   patient_id int [not null, ref: > patients.id]
   diagnosis_id int [not null, ref: > diagnoses.id]
   care_plan_id int [not null, ref: > care_plans.id]
+  assigned_by int [not null, ref: > users.id]
   //diagnosed_by varchar(255) [not null]
   //diagnosis_date date [not null]
-  assigned_by int [not null, ref: > users.id]
   //assigned_at timestamp [not null]
   notes text [null]
   created_at timestamp [default: now()]
@@ -764,6 +765,8 @@ Table medicines {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -772,6 +775,8 @@ Table personal_interests {
   id int [pk, increment]
   name varchar [unique, not null]
   description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -779,6 +784,8 @@ Table healthcare_workers_personal_interests {
   id int [pk, increment]
   hcw_id int [not null, ref: > healthcare_workers.id]
   interest_id int [not null, ref: > personal_interests.id]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -787,16 +794,19 @@ Table mobility_challenges {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // info about mobility challenges managed by a user or company possible marketing purposes later
 Table user_managed_mobility_challenges {
   id int [pk, increment]
-  mobilitychallenges_id int [not null, ref: > mobility_challenges.id]
+  challenge_id int [not null, ref: > mobility_challenges.id]
   user_id int [not null, ref: > users.id]
-  assigned_at timestamp [not null]
   description text [null]
+  assigned_at timestamp [not null]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -805,29 +815,33 @@ Table perception_communication_issues {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // perception communication issues recorded for a patient
 Table patients_perception_communication_issues {
   id int [pk, increment]
-  preceptioncommunicationissues_id int [not null, ref: > perception_communication_issues.id]
+  issue_id int [not null, ref: > perception_communication_issues.id]
   patient_id int [not null, ref: > patients.id]
   assigned_by int [not null, ref: > users.id]
-  careplan_id int [not null, ref: > care_plans.id]
+  care_plan_id int [not null, ref: > care_plans.id]
   //recorded_by int [ref: > HealthcareWorkers.hcw_id]
-  recorded_at timestamp [not null]
   description text [null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // info about perception communication issues managed by a user or company possible marketing purposes later
 Table user_managed_perception_communication_issues {
   id int [pk, increment]
-  preceptioncommunicationissues_id int [not null, ref: > perception_communication_issues.id]
+  issue_id int [not null, ref: > perception_communication_issues.id]
   user_id int [not null, ref: > users.id]
-  assigned_at timestamp [not null]
   description text [null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -836,16 +850,19 @@ Table nutritional_challenges {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   notes text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
 // info about nutritional challenges managed by a user or company possible marketing purposes later
 Table user_managed_nutritional_challenges {
   id int [pk, increment]
-  nutritionalchallenges_id int [not null, ref: > nutritional_challenges.id]
+  challenge_id int [not null, ref: > nutritional_challenges.id]
   user_id int [not null, ref: > users.id]
-  assigned_at timestamp [not null]
   notes text [null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -854,6 +871,8 @@ Table moods {
   id int [pk, increment]
   name varchar(100) [unique]
   description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
@@ -862,8 +881,9 @@ Table user_managed_moods {
   id int [pk, increment]
   mood_id int [not null, ref: > moods.id]
   user_id int [not null, ref: > users.id]
-  assigned_at timestamp [not null]
   notes text [null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -872,6 +892,8 @@ Table health_conditions {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
@@ -881,7 +903,8 @@ Table user_managed_health_conditions {
   healthconditions_id int [not null, ref: > health_conditions.id]
   user_id int [not null, ref: > users.id]
   started_at date [not null]
-  assigned_at timestamp [not null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -890,6 +913,8 @@ Table cognition_states {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -898,6 +923,8 @@ Table allergies {
   id int [pk, increment]
   name varchar(200) [unique, not null]
   description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -906,6 +933,8 @@ Table diagnoses {
   id int [pk, increment]
   name varchar(200) [unique, not null]
   description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -914,7 +943,8 @@ Table property_types {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   description text [null]
-  created_at timestamp [not null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
@@ -924,8 +954,9 @@ Table patients_property_types {
   patient_id int [not null, ref: > patients.id]
   property_type_id int [not null, ref: > property_types.id]
   assigned_by int [not null, ref: > users.id]
-  created_at timestamp [not null]
   notes text [null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -934,7 +965,8 @@ Table user_managed_property_types {
   id int [pk, increment]
   property_type_id int [not null, ref: > property_types.id]
   user_id int [not null, ref: > users.id]
-  created_at timestamp [not null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -943,7 +975,8 @@ Table care_settings {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   description text [null]
-  created_at timestamp [not null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
@@ -953,7 +986,8 @@ Table patients_care_settings {
   patient_id int [not null, ref: > patients.id]
   care_setting_id int [not null, ref: > care_settings.id]
   assigned_by int [not null, ref: > users.id]
-  assigned_at timestamp [not null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
@@ -962,7 +996,8 @@ Table user_managed_care_settings {
   id int [pk, increment]
   user_id int [not null, ref: > users.id]
   care_setting_id int [not null, ref: > care_settings.id]
-  created_at timestamp [not null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -971,7 +1006,8 @@ Table healthcare_workers_preferred_care_settings {
   id int [pk, increment]
   hcw_id int [not null, ref: > healthcare_workers.id]
   care_setting_id int [not null, ref: > care_settings.id]
-  assigned_at timestamp [not null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -1088,7 +1124,8 @@ Table invoices_items {
   period_end date [not null]
   total_hours decimal(5,2) [not null]
   total_pay decimal(10,2) [not null]
-  generated_at timestamp [not null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 //Table UserPayment {
@@ -1107,6 +1144,8 @@ Table job_credentials {
     id int [pk, increment]
     credentials_id int [not null, ref: > credentials.id]
     job_id int [not null, ref: > jobs.id]
+    assigned_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -1152,8 +1191,9 @@ Table users_transactions {
   amount decimal(10,2) [not null]
   payment_method enum("Cash", "Credit Card", "Insurance", "Wallet Deduction") [not null]
   status enum("Pending", "Completed", "Reversed", 'declined') [not null]
-  created_at timestamp [not null]
   notes text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -1226,6 +1266,7 @@ Table job_messages {
   sent_at timestamp [null]
   is_read boolean [default: false]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
   deleted_at timestamp [null]
 
   indexes {
@@ -1305,17 +1346,19 @@ Table healthcare_worker_expertise {
   name varchar(100) [unique, not null]
   description text [null]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
 // Healthcare worker expertise assignments
-Table healthcare_worker_expertise_assignments {
+Table healthcare_worker_expertise_info {
   id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
   expertise_id int [not null, ref: > healthcare_worker_expertise.id]
   assigned_at date [not null]
   notes text [null]
-  created_at timestamp [default: now()]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (worker_id, expertise_id)
@@ -1329,6 +1372,7 @@ Table healthcare_workers_shifts {
   name varchar(100) [unique, not null]
   notes text [null]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2 DUPLICATED
@@ -1337,7 +1381,8 @@ Table healthcare_workers_preferred_shifts {
   id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
   shift_id int [not null, ref: > healthcare_workers_shifts.id]
-  created_at timestamp [default: now()]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (worker_id, shift_id)
@@ -1351,6 +1396,7 @@ Table healthcare_workers_schedules {
   name varchar(100) [unique, not null]
   description text [null]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2 DUPLICATED
@@ -1361,7 +1407,8 @@ Table healthcare_workers_preferred_schedules {
   schedule_id int [not null, ref: > healthcare_workers_schedules.id]
   hours_range enum('1-8', '8-20', '20-40', '40+') [not null]
   start_date date [not null]
-  created_at timestamp [default: now()]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (worker_id, schedule_id)
@@ -1398,6 +1445,7 @@ Table healthcare_workers_categories {
   name varchar(100) [not null, unique]
   description text [null]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2 DUPLICATED
@@ -1407,6 +1455,7 @@ Table healthcare_workers_category_assignments {
   worker_id int [not null, ref: > healthcare_workers.id]
   category_id int [not null, ref: > healthcare_workers_categories.id]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (worker_id, category_id)
@@ -1470,7 +1519,8 @@ Table healthcare_workers_services {
   id int [pk, increment]
   service_id int [not null, ref: > services.id]
   worker_id int [not null, ref: > healthcare_workers.id]
-  created_at timestamp [default: now()]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (worker_id, service_id)
@@ -1525,6 +1575,8 @@ Table ethnicities {
   id int [pk, increment]
   name varchar(100) [not null, unique]
   description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS
@@ -1532,6 +1584,8 @@ Table healthcare_workers_tags {
   id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
   tag_id int [not null, ref: > tags.id]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -1591,8 +1645,9 @@ Table api_keys {
   permissions json [not null] // Specific permissions for this key
   last_used   timestamp [null]
   expires_at  timestamp [null]
-  created_at  timestamp [default: now()]
   revoked_at  timestamp [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     key_hash
@@ -1606,7 +1661,8 @@ Table roles {
   id          int [pk, increment]
   name        varchar(100) [unique, not null]
   description text [null]
-  created_at  timestamp [default: now()]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS
@@ -1615,6 +1671,7 @@ Table user_roles {
   user_id    int [not null, ref: > users.id]
   role_id    int [not null, ref: > roles.id]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (user_id, role_id) [unique]
@@ -1626,14 +1683,16 @@ Table permissions {
   id          int [pk, increment]
   name        varchar(100) [unique, not null]
   description text [null]
-  created_at  timestamp [default: now()]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 Table role_permissions {
   role_id       int [not null, ref: > roles.id]
   permission_id int [not null, ref: > permissions.id]
-  created_at    timestamp [default: now()]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (role_id, permission_id) [unique]
@@ -1651,7 +1710,8 @@ Table audit_logs {
   changes       json [not null] // Before/after values
   ip_address    varchar(45) [not null]
   user_agent    text [null]
-  created_at    timestamp [default: now()]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     user_id
@@ -1669,7 +1729,8 @@ Table rate_limits {
   endpoint      varchar(255) [not null]
   request_count int [not null]
   window_start  timestamp [not null]
-  created_at    timestamp [default: now()]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (ip_address, endpoint)
@@ -1685,7 +1746,8 @@ Table care_plan_versions {
   version      int [not null]
   changes      json [not null]
   created_by   int [not null, ref: > users.id]
-  created_at   timestamp [default: now()]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (care_plan_id, version) [unique]
@@ -1701,6 +1763,7 @@ Table application_documents {
   file_url varchar(255) [not null]
   uploaded_at timestamp [not null]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     application_id
@@ -1725,6 +1788,7 @@ Table work_environment_exceptions {
   name varchar(200) [unique, not null]
   description text [null]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2, DUPLICATED
@@ -1733,7 +1797,8 @@ Table healthcare_workers_preferred_environment_exceptions {
   id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
   exception_id int [not null, ref: > work_environment_exceptions.id]
-  created_at timestamp [default: now()]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (worker_id, exception_id)
@@ -1783,6 +1848,7 @@ Table healthcare_workers_performance_metrics {
   name varchar(100) [unique, not null]
   description text [null]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TODO: name change to reviews?
@@ -1817,6 +1883,8 @@ Table healthcare_workers_activity_logs {
   last_login date [not null]
   member_since date [not null]
   total_bookings int [not null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     worker_id
@@ -1878,7 +1946,7 @@ Table care_plans {
   end_date date [not null]
   created_by int [not null, ref: > users.id]
   created_at timestamp [default: now()]
-  updated_at timestamp [null]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -1989,7 +2057,8 @@ Table jobs_required_credentials {
   job_id int [not null, ref: > jobs.id]
   credential_id int [not null, ref: > credentials.id]
   is_mandatory boolean [default: true]
-  created_at timestamp [default: now()]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (job_id, credential_id)
@@ -2006,7 +2075,8 @@ Table jobs_required_services {
   is_scheduled boolean [not null]
   schedule_days json [null] // Array of days when service is needed
   notes text [null]
-  created_at timestamp [default: now()]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (job_id, service_id)
@@ -2021,6 +2091,7 @@ Table jobs_environment_exceptions {
   job_id int [not null, ref: > jobs.id]
   exception_id int [not null, ref: > work_environment_exceptions.id]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (job_id, exception_id)
@@ -2035,7 +2106,8 @@ Table jobs_required_languages {
   language_id int [not null, ref: > languages.id]
   proficiency_level enum("basic", "intermediate", "fluent", "native") [not null]
   is_mandatory boolean [default: true]
-  created_at timestamp [default: now()]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     (job_id, language_id)
@@ -2050,6 +2122,8 @@ Table patients_preferred_languages {
     id int [pk, increment]
     language_id int [not null, ref: > languages.id]
     patient_id int [not null, ref: > patients.id]
+    assigned_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
@@ -2059,6 +2133,8 @@ Table users_preferred_languages {
     id int [pk, increment]
     language_id int [not null, ref: > languages.id]
     user_id int [not null, ref: > users.id]
+    assigned_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
@@ -2067,6 +2143,8 @@ Table patients_preferred_skills {
     id int [pk, increment]
     skill_id int [not null, ref: > skills.id]
     patient_id int [not null, ref: > patients.id]
+    assigned_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
@@ -2075,6 +2153,8 @@ Table users_preferred_skills {
     id int [pk, increment]
     skill_id int [not null, ref: > skills.id]
     user_id int [not null, ref: > users.id]
+    assigned_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
@@ -2083,6 +2163,8 @@ Table patients_preferred_credentials {
     id int [pk, increment]
     credentials_id int [not null, ref: > credentials.id]
     patient_id int [not null, ref: > patients.id]
+    assigned_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
@@ -2091,6 +2173,8 @@ Table users_preferred_credentials {
     id int [pk, increment]
     credentials_id int [not null, ref: > credentials.id]
     user_id int [not null, ref: > users.id]
+    assigned_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2099,6 +2183,8 @@ Table child_care_activities {
     id int [pk, increment]
     name varchar(100) [unique, not null]
     description text [null]
+    created_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2108,6 +2194,8 @@ Table jobs_child_care_activities {
     job_id int [not null, ref: > jobs.id]
     hcw_id int [not null, ref: > healthcare_workers.id]
     notes text [null]
+    assigned_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2116,6 +2204,8 @@ Table adult_care_activities {
     id int [pk, increment]
     name varchar(100) [unique, not null]
     description text [null]
+    assigned_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2125,6 +2215,8 @@ Table jobs_adult_care_activities {
     job_id int [not null, ref: > jobs.id]
     hcw_id int [not null, ref: > healthcare_workers.id]
     notes text [null]
+    assigned_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2136,8 +2228,8 @@ Table care_plans {
   description text [null]
   start_date date [not null]
   end_date date [not null]
-  created_at timestamp [not null]
-  updated_at timestamp [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2148,6 +2240,8 @@ Table care_plan_care_team {
   hcw_id int [not null, ref: > healthcare_workers.id]
   role enum("Primary Caregiver", "Secondary Caregiver", "Support Worker", "Therapist", "Nurse", "Physician", "Specialist", "Other") [not null]
   notes text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2170,7 +2264,8 @@ Table care_plan_chartting {
   additional_notes text [null]
   attachments json [null]
   signature varchar(255) [not null]
-  updated_at timestamp [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2, TO_BE_REVIEWED
@@ -2179,6 +2274,8 @@ Table jobs_credentials {
   id int [pk, increment]
   job_id int [not null, ref: > jobs.id]
   credential_id int [not null, ref: > credentials.id]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2, TO_BE_REVIEWED
@@ -2187,6 +2284,8 @@ Table jobs_services {
   id int [pk, increment]
   job_id int [not null, ref: > jobs.id]
   service_id int [not null, ref: > services.id]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: TO_BE_REVIEWED
@@ -2195,6 +2294,8 @@ Table jobs_personal_interests {
   id int [pk, increment]
   job_id int [not null, ref: > jobs.id]
   interest_id int [not null, ref: > personal_interests.id]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2218,8 +2319,9 @@ Table healthcare_workers {
   intro_video varchar(255) [null]
   experience_years int [null]
   membership_start date [null]
-  updated_at timestamp [not null]
   notes text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2, TO_BE_REVIEWED
@@ -2231,8 +2333,8 @@ Table rates {
   rate decimal(10,2) [not null]
   rate_type enum('hourly', 'daily', 'contract', 'live-in flat daily') [not null]
   effective_date date [not null]
-  assigned_at timestamp [not null]
-  updated_at timestamp [not null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2240,9 +2342,9 @@ Table rates {
 Table healthcare_workers_expertises {
   id int [pk, increment]
   name varchar(100) [unique, not null]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
   description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2251,9 +2353,9 @@ Table healthcare_workers_expertises_info {
   id int [pk, increment]
   hcw_id int [not null, ref: > healthcare_workers.id]
   expertise_id int [not null, ref: > healthcare_workers_expertises.id]
-  assigned_at timestamp [not null]
-  updated_at timestamp [not null]
   notes text [null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2261,9 +2363,9 @@ Table healthcare_workers_expertises_info {
 Table healthcare_workers_shifts {
   id int [pk, increment]
   name varchar(100) [unique, not null]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
   notes text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2272,9 +2374,9 @@ Table healthcare_workers_preferred_shifts {
   id int [pk, increment]
   hcw_id int [not null, ref: > healthcare_workers.id]
   shift_id int [not null, ref: > healthcare_workers_shifts.id]
-  assigned_at timestamp [not null]
-  updated_at timestamp [not null]
   notes text [null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2283,8 +2385,8 @@ Table healthcare_workers_schedules {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   description text [null]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2295,8 +2397,8 @@ Table healthcare_workers_preferred_schedules {
   schedule_id int [not null, ref: > healthcare_workers_schedules.id]
   num_hours enum('1-8', '8-20', '20-40', '40+') [not null]
   start_date date [not null]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2310,8 +2412,8 @@ Table healthcare_workers_addresses {
   province varchar(100) [not null]
   postal_code varchar(20) [not null]
   country varchar(100) [not null]
-  created_at timestamp [not null]
-  updated_at timestamp [not null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2, TO_BE_REVIEWED
@@ -2349,9 +2451,9 @@ Table healthcare_workers_subcategories_info {
 Table healthcare_workers_subcategories {
     id int [pk, increment]
     cat_id int [not null, ref: > healthcare_workers_categories.id]
+    notes text [null]
     created_at timestamp [default: now()]
     updated_at timestamp [default: now()]
-    notes text [null]
 }
 
 // TAGS: TO_BE_REVIEWED
@@ -2360,6 +2462,8 @@ Table healthcare_workers_positions {
     id int [pk, increment]
     name varchar(100) [not null, unique]
     notes text [null]
+    created_at timestamp [default: now()]
+    updated_at timestamp [default: now()]
 }
 
 // TAGS: TO_BE_REVIEWED
@@ -2411,7 +2515,8 @@ Table healthcare_workers_notes {
   id int [pk, increment]
   hcw_id int [not null, ref: > healthcare_workers.id]
   notes text [not null]
-  created_at timestamp [not null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TODO: verify TAGS
@@ -2424,6 +2529,8 @@ Table job_application_documents {
   file_url varchar [not null]
   uploaded_at timestamp [not null]
   notes text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2432,8 +2539,8 @@ Table healthcare_workers_preferred_environment_exceptions {
   id int [pk, increment]
   hcw_id int [not null, ref: > healthcare_workers.id]
   exception_id int [not null, ref: > work_environment_exceptions.id]
-  assigned_at timestamp [null]
-  updated_at timestamp [null]
+  assigned_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2451,33 +2558,6 @@ Table healthcare_worker_emails {
     (worker_id, email) [unique]
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// SECURITY DATA Section
 
 // Healthcare worker authentication methods
 Table healthcare_worker_auth {
@@ -2513,9 +2593,9 @@ Table healthcare_worker_phone_verifications {
   is_verified boolean [default: false]
   expires_at timestamp [not null] // Code expiration time
   attempts int [default: 0] // Number of verification attempts
+  verified_at timestamp [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
-  verified_at timestamp [null]
   
   indexes {
     (worker_id, phone_number) [unique] // One verification process per phone number
@@ -2536,6 +2616,7 @@ Table healthcare_worker_security_logs {
   metadata json [null]
   severity enum("info", "warning", "critical") [not null]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     worker_id
@@ -2556,10 +2637,11 @@ Table healthcare_worker_sessions {
   device_info json [null]
   location json [null]
   expires_at timestamp [not null]
-  created_at timestamp [default: now()]
   last_activity timestamp [default: now()]
   ended_at timestamp [null]
   end_reason enum("expired", "logged_out", "session_invalidated") [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     session_token
@@ -2614,6 +2696,8 @@ Table healthcare_worker_password_resets {
   ip_address varchar(45) [not null]
   user_agent text
   success boolean [default: false]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     reset_token
@@ -2623,10 +2707,6 @@ Table healthcare_worker_password_resets {
 }
 
 
-
-
-// SUGGESTIONS Section
-
 // SUGGESTION: tracking sharing of careplans
 // which hcw have access to a careplan
 Table care_plan_shares {
@@ -2634,6 +2714,8 @@ Table care_plan_shares {
   careplan_id int [not null, ref: > care_plans.id]
   hcw_id int [not null, ref: > healthcare_workers.id]
   status enum("pending", "accepted", "declined") [not null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // Linked social media accounts
@@ -2665,9 +2747,6 @@ Table social_media_accounts {
   }
 }
 
-
-// HISTORICAL DATA Section
-
 // TAGS: INCLUDED_V2
 // Tracks HCWs' historical job info (only if hired)
 Table healthcare_workers_jobs {
@@ -2678,8 +2757,8 @@ Table healthcare_workers_jobs {
   hired_at timestamp [null]
   start_date date [not null]
   end_date date [not null]
-  created_at timestamp [null]
-  updated_at timestamp [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -2690,6 +2769,8 @@ Table healthcare_workers_activity {
   last_login date [not null]
   member_since date [not null]
   total_no_bookings int [not null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 }
 
 // Track patient management history - records individual changes
@@ -2703,6 +2784,7 @@ Table user_patient_management_history {
   notes text [null]
   //performed_by int [not null, ref: > users.id]
   created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
     user_id
@@ -2789,9 +2871,6 @@ Table user_patient_management_stats {
     )"
   }
 }
-
-
-// OTHER DEVICE OR PLATFORM DATA SECTION
 
 // Healthcare worker devices
 Table healthcare_worker_devices {
