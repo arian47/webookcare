@@ -4,59 +4,78 @@
 // TAGS: INCLUDED_V2
 // Main users table - stores core information about individuals and companies managing patients
 Table users {
-  id              int [pk, increment]
-  first_name      varchar(100) [not null]
-  last_name       varchar(100) [not null]
-  middle_name     varchar(100) [null]
-  date_of_birth   date [not null]
-  phone_number    varchar(20) [unique, not null] // Primary contact number
-  phone_verified  boolean [default: false] // Whether phone number is verified
-  email           varchar(255) [unique, not null] // Primary email
-  gender          enum("male", "female", "other")
-  hashed_password varchar(255) [null] // Null if user only uses OAuth
-  wallet_id       int [null, ref: > user_wallets.id] // Reference to user's digital wallet
-  referral_code   varchar [null] // Code used for referral program
-  business_name   varchar(255) [null] // For business/company accounts
-  legal_name      varchar(255) [null] // Legal business name
-  failed_attempts int [default: 0] // Track failed login attempts
-  is_locked       boolean [default: false] // Account gets locked after too many failed attempts
-  created_at      timestamp [default: now()]
-  updated_at      timestamp [default: now()]
-  deleted_at      timestamp [null]
+  id                int [pk, increment]
+  username          varchar(50) [unique, null]
+  first_name        varchar(100) [not null]
+  last_name         varchar(100) [not null]
+  middle_name       varchar(100) [null]
+  date_of_birth     date [not null]
+  gender           enum("male", "female", "other", "prefer_not_to_say") [not null]
+  primary_email_id int [null, ref: > user_emails.id]
+  primary_phone_id int [null, ref: > user_phone_numbers.id]
+  wallet_id        int [null, ref: > user_wallets.id] // Reference to user's digital wallet
+  timezone          varchar(50) [null]
+  preferred_language varchar(10) [null]
+  referral_code    varchar(20) [null] // Code used for referral program
+  referred_by      int [null, ref: > users.id] // Track who referred this user
+  created_at       timestamp [default: now()]
+  updated_at       timestamp [default: now()]
+  deleted_at       timestamp [null]
 
   indexes {
     (first_name, last_name)
-    email
-    phone_number
+    username
     referral_code
+    referred_by
+    status
   }
 }
 
 // TAGS: INCLUDED_V2
-// Secondary email addresses for users
-Table user_emails {
-  id         int [pk, increment]
-  user_id    int [not null, ref: > users.id]
-  email      varchar(255) [unique, not null]
+Table user_addresses {
+  id int [pk, increment]
+  user_id int [not null, ref: > users.id]
+  address_type enum("home", "work", "billing", "shipping", "other") [not null]
   is_primary boolean [default: false]
-  verified   boolean [default: false]
+  address_line1 varchar(255) [not null]
+  address_line2 varchar(255) [null]
+  unit_no varchar(50) [null]
+  city varchar(100) [not null]
+  state_province varchar(100) [not null]
+  postal_code varchar(20) [not null]
+  country varchar(100) [not null]
+  is_verified boolean [default: false]
+  is_primary boolean [default: false] // Whether this is the user's primary address
+  latitude decimal(10,8) [null] 
+  longitude decimal(11,8) [null]
+  verified_at timestamp [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
-  deleted_at      timestamp [null]
+  deleted_at timestamp [null]
 
   indexes {
-    (user_id, email) [unique]
+    user_id
+    address_type
+    (user_id, address_type, is_primary)
+    postal_code
+    country
   }
 }
 
-// TAGS: INCLUDED_V2 TO_BE_REVIEWED
-// secondary contact details for the users
+// TAGS: INCLUDED_V2
 Table user_contacts {
   id int [pk, increment]
-  user_id int [not null, ref: > patients.id]
+  user_id int [not null, ref: > users.id]
+  first_name varchar(100) [not null]
+  last_name varchar(100) [not null]
+  middle_name varchar(100) [null]
+  relationship varchar(100) [null]
+  email varchar(255) [null]
   phone_number varchar(20) [null]
+  alt_phone_number varchar(20) [null]
   is_primary boolean [default: false]
-  contact_type enum("emergency", "work") [not null]
+  contact_type enum("emergency", "work", "family", "other") [not null]
+  notes text [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
   deleted_at timestamp [null]
@@ -64,190 +83,410 @@ Table user_contacts {
   indexes {
     user_id
     contact_type
-    (email_address, phone_number)
-  }
-}
-
-// TAGS: INCLUDED_V2
-// Phone verification codes
-Table user_phone_verification_codes {
-  id            int [pk, increment]
-  user_id       int [not null, ref: > users.id]
-  phone_number  varchar(20) [not null]
-  code          varchar(6) [not null] // Verification code sent to user
-  expires_at    timestamp [not null]
-  attempts      int [default: 0] // Number of verification attempts
-  verified      boolean [default: false]
-  created_at    timestamp [default: now()]
-  verified_at   timestamp [null]
-
-  indexes {
-    user_id
+    (first_name, last_name)
+    email
     phone_number
-    code
-    expires_at
+    (user_id, contact_type, is_primary)
   }
 }
 
 // TAGS: INCLUDED_V2
-// Supported authentication methods/providers
-Table auth_providers {
-  id int [pk, increment]
-  provider enum("email", "apple", "google", "facebook", "microsoft", "twitter", "linkedin", "github", "phone") [not null]
-  display_name varchar(100) [not null] // Friendly name for display
-  is_active boolean [default: true]
-  client_id varchar(255) [null] // OAuth client ID if applicable
-  client_secret varchar(255) [null] // OAuth client secret if applicable 
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-
-  indexes {
-    provider [unique]
-    is_active
-  }
-}
-
-// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
-// Links users to their authentication methods
-Table user_auth {
+// Secondary email addresses for users
+Table user_emails {
   id int [pk, increment]
   user_id int [not null, ref: > users.id]
-  provider_id int [not null, ref: > auth_providers.id]
-  provider_uid varchar(255) [not null] // External provider's user ID
-  email varchar(255) [null] // Email associated with this auth method
-  access_token text [null] // OAuth access token
-  refresh_token text [null] // OAuth refresh token
-  token_expires_at timestamp [null]
-  last_login_at timestamp [null]
-  is_primary boolean [default: false] // Primary auth method for user
-  metadata json [null] // Additional provider-specific data
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-
-  indexes {
-    (user_id, provider_id) [unique]
-    provider_uid
-    email
-    is_primary
-    last_login_at
-  }
-}
-
-// TAGS: INCLUDED_V2
-// Additional user information and preferences
-// TODO: check with design and possible duplicates
-Table user_profiles {
-  id         int [pk, increment]
-  user_id    int [not null, ref: > users.id]
-  bio        text
-  location   varchar(255)
-  interests  text
+  email varchar(255) [unique, not null]
+  is_primary boolean [default: false]
+  verified boolean [default: false]
+  verification_token varchar(255) [null]
+  verification_expires_at timestamp [null]
+  verification_attempts int [default: 0]
+  verified_at timestamp [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
   deleted_at timestamp [null]
 
   indexes {
-    user_id
+    (user_id, email) [unique]
+    verification_token
+    verification_expires_at
+    (user_id, is_primary)
   }
 }
 
-
-// TAGS: INCLUDED_V2
-// Password reset management
-Table password_resets {
-  id            int [pk, increment]
-  user_id       int [not null, ref: > users.id]
-  reset_token   varchar(255) [not null]
-  expires_at    timestamp [not null]
-  created_at    timestamp [default: now()]
-  used          boolean [default: false]
-  ip_address    varchar(45) [not null]
-  user_agent    text
-  success       boolean [default: false]
+// TAGS: INCLUDED_V2 TO_BE_REVIEWED
+// secondary contact details for the users
+Table user_phone_numbers {
+  id int [pk, increment]
+  user_id int [not null, ref: > users.id]
+  phone_number varchar(20) [unique, not null]
+  is_primary boolean [default: false]
+  verified boolean [default: false]
+  verification_token varchar(255) [null]
+  verification_expires_at timestamp [null]
+  verification_attempts int [default: 0]
+  verified_at timestamp [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
 
   indexes {
-    reset_token
+    (user_id, phone_number) [unique]
+    phone_number
+    (user_id, is_primary)
+  }
+}
+
+// TAGS: INCLUDED_V2
+Table user_security {
+  id int [pk, increment]
+  user_id int [not null, ref: > users.id]
+  primary_auth_method_id int [null, ref: > user_auth_methods.id]
+  hashed_password varchar(255) [null]
+  password_changed_at timestamp [null]
+  two_factor_enabled boolean [default: false]
+  two_factor_secret varchar(255) [null]
+  backup_codes json [null]
+  failed_attempts int [default: 0]
+  is_locked boolean [default: false]
+  locked_until timestamp [null]
+  last_login_at timestamp [null]
+  password_reset_token varchar(255) [null]
+  password_reset_expires_at timestamp [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+
+  indexes {
+    user_id [unique]
+    primary_auth_method_id
+    password_reset_token
+  }
+}
+
+// TAGS: INCLUDED_V2 TO_BE_REVIEWED
+// "sole_proprietorship", "partnership", "corporation", "llc"
+Table business_types {
+  id int [pk, increment]
+  name varchar(100) [unique, not null]
+  description text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
+
+  indexes {
+    name [unique]
+  }
+}
+
+// TAGS: INCLUDED_V2 TO_BE_REVIEWED
+Table business_profiles {
+  id int [pk, increment]
+  user_id int [not null, ref: > users.id]
+  business_name varchar(255) [not null]
+  legal_name varchar(255) [not null]
+  business_number varchar(50) [unique, not null]
+  tax_id varchar(50) [null]
+  business_type [not null, ref: > business_types.id]
+  industry varchar(100) [null]
+  website varchar(255) [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
+
+  indexes {
+    user_id [unique]
+    business_number
+    business_type
+  }
+}
+
+// TAGS: INCLUDED_V2
+// Authentication providers configuration
+Table auth_providers {
+  id int [pk, increment]
+  provider enum("email", "phone", "apple", "google", "facebook", "microsoft", "twitter", "linkedin", "github") [not null]
+  display_name varchar(100) [not null]
+  provider_type enum("oauth", "oauth2", "oidc", "password", "phone") [not null]
+  is_active boolean [default: true]
+  client_id varchar(255) [null]
+  client_secret varchar(255) [null]
+  redirect_uri varchar(255) [null]
+  scopes text [null]
+  icon_url varchar(255) [null]
+  order_priority int [default: 0]
+  rate_limit_attempts int [null]
+  rate_limit_duration interval [null]
+  metadata json [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
+
+  indexes {
+    provider [unique]
+    provider_type
+    is_active
+    order_priority
+  }
+}
+
+// TAGS: INCLUDED_V2
+// User authentication methods
+Table user_auth_methods {
+  id int [pk, increment]
+  user_id int [not null, ref: > users.id]
+  provider_id int [not null, ref: > auth_providers.id]
+  provider_uid varchar(255) [not null]
+  email varchar(255) [null]
+  phone varchar(20) [null]
+  access_token text [null]
+  refresh_token text [null]
+  id_token text [null]  // For OpenID Connect
+  token_expires_at timestamp [null]
+  last_login_at timestamp [null]
+  is_primary boolean [default: false]
+  verified_at timestamp [null]
+  verification_method enum("email", "phone", "admin") [null]
+  metadata json [null]
+  status enum("active", "revoked", "expired", "pending_verification") [not null, default: "pending_verification"]
+  revoked_at timestamp [null]
+  revoked_reason text [null]
+  last_used_at timestamp [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
+
+  indexes {
+    (user_id, provider_id) [unique]
+    provider_uid
+    email
+    phone
+    is_primary
+    status
+    last_login_at
+    last_used_at
+    verified_at
+  }
+
+  checks {
+    // Ensure either email or phone is provided for relevant providers
+    check ((provider_id in (select id from auth_providers where provider in ('email', 'phone')) 
+           and (email is not null or phone is not null))
+           or provider_id not in (select id from auth_providers where provider in ('email', 'phone')))
+  }
+}
+
+// TAGS: INCLUDED_V2
+// Authentication attempts tracking
+Table auth_attempts {
+  id int [pk, increment]
+  user_id int [null, ref: > users.id]
+  auth_method_id int [null, ref: > user_auth_methods.id]
+  provider_id int [not null, ref: > auth_providers.id]
+  ip_address varchar(45) [not null]
+  user_agent text [null]
+  device_id varchar(255) [null]
+  status enum("success", "failed", "blocked", "rate_limited") [not null]
+  failure_reason enum(
+    "invalid_credentials",
+    "account_locked",
+    "account_disabled",
+    "invalid_token",
+    "expired_token",
+    "rate_limited",
+    "verification_required",
+    "other"
+  ) [null]
+  attempt_type enum("login", "refresh_token", "reset_password", "verify_email", "verify_phone") [not null]
+  attempted_at timestamp [default: now()]
+  metadata json [null]
+
+  indexes {
     user_id
+    auth_method_id
+    provider_id
+    ip_address
+    device_id
+    status
+    attempt_type
+    attempted_at
+    (ip_address, provider_id, attempted_at)
+    (user_id, provider_id, attempted_at)
+  }
+}
+
+// TAGS: INCLUDED_V2
+// OAuth state management
+Table oauth_states {
+  id int [pk, increment]
+  state varchar(255) [unique, not null]
+  provider_id int [not null, ref: > auth_providers.id]
+  redirect_url text [null]
+  code_verifier varchar(255) [null]  // For PKCE
+  code_challenge varchar(255) [null]  // For PKCE
+  code_challenge_method enum("S256", "plain") [null]  // For PKCE
+  nonce varchar(255) [null]  // For OpenID Connect
+  metadata json [null]
+  expires_at timestamp [not null]
+  created_at timestamp [default: now()]
+  used_at timestamp [null]
+  ip_address varchar(45) [not null]
+  user_agent text [null]
+
+  indexes {
+    state
+    provider_id
     expires_at
+    used_at
+  }
+}
+
+// TAGS: INCLUDED_V2 POTENTIALLY_TO_BE_REMOVED
+// Additional user information and preferences
+// TODO: check with design and possible duplicates
+// User profile and preferences (consolidated)
+Table user_profiles {
+  id int [pk, increment]
+  user_id int [not null, ref: > users.id]
+  bio text [null]
+  profile_picture varchar(255) [null]
+  interests text [null]
+  notification_preferences json [null] // {email: {}, sms: {}, push: {}}
+  privacy_settings json [null] // {profile_visibility: {}, contact_preferences: {}}
+  theme_preference varchar(20) [default: "system"] // light, dark, system
+  accessibility_settings json [null]
+  marketing_preferences json [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
+
+  indexes {
+    user_id [unique]
   }
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Security audit trail
-Table security_logs {
-  id            int [pk, increment] 
-  user_id       int [not null, ref: > users.id]
-  action        enum("failed_login", "successful_login", "password_reset_requested", "password_reset_completed", "account_locked", "account_unlocked", "mfa_enabled", "mfa_disabled", "suspicious_activity", "ip_change", "device_change", "password_changed", "email_changed", "profile_updated") [not null]
-  ip_address    varchar(45) [not null]
-  user_agent    text
-  location      json [null] // City, country, coordinates
-  device_info   json [null] // OS, browser, etc
-  metadata      json [null]
-  severity      enum("info", "warning", "critical") [not null]
-  created_at    timestamp [default: now()]
+// Security events and audit log (enhanced)
+Table security_events {
+  id int [pk, increment]
+  user_id int [not null, ref: > users.id]
+  event_type enum(
+    // Auth events
+    "login_success",
+    "login_failure",
+    "logout",
+    "password_change",
+    "password_reset_request",
+    "password_reset_complete",
+    "mfa_enabled",
+    "mfa_disabled",
+    "email_change",
+    "phone_change",
+    // Security events
+    "account_lock",
+    "account_unlock",
+    "suspicious_activity",
+    "ip_change",
+    // Device events
+    "device_added",
+    "device_removed",
+    "device_trusted",
+    "device_untrusted",
+    // Session events
+    "session_created",
+    "session_expired",
+    "session_revoked"
+  ) [not null]
+  auth_method_id int [null, ref: > user_auth_methods.id]
+  device_id int [null, ref: > user_devices.id]
+  session_id varchar(255) [null, ref: > user_sessions.session_token]
+  ip_address varchar(45) [not null]
+  location json [null] // {city, region, country, coordinates}
+  user_agent text [null]
+  severity enum("info", "warning", "critical") [not null]
+  metadata json [null]
+  created_at timestamp [default: now()]
+  request_id uuid [not null]
 
   indexes {
     user_id
-    action
-    severity  
+    event_type
+    auth_method_id
+    device_id
+    session_id
+    severity
     created_at
-    ip_address
+    request_id
+    (user_id, created_at)
+    (event_type, created_at)
   }
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS
-// Session management
+// User sessions with auth method tracking
 Table user_sessions {
-  id            int [pk, increment]
-  user_id       int [not null, ref: > users.id]
-  session_token varchar(255) [not null]
-  ip_address    varchar(45) [not null]
-  user_agent    text
-  device_info   json [null]
-  location      json [null]
-  expires_at    timestamp [not null]
-  created_at    timestamp [default: now()]
+  id int [pk, increment]
+  user_id int [not null, ref: > users.id]
+  auth_method_id int [not null, ref: > user_auth_methods.id]
+  session_token varchar(255) [unique, not null]
+  refresh_token varchar(255) [unique, null]
+  ip_address varchar(45) [not null]
+  user_agent text [null]
+  expires_at timestamp [not null]
   last_activity timestamp [default: now()]
-  ended_at      timestamp [null]
-  end_reason    enum("expired", "logged_out", "session_invalidated") [null]
+  is_valid boolean [default: true]
+  metadata json [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
 
   indexes {
-    session_token
     user_id
+    auth_method_id
+    session_token
+    refresh_token
     expires_at
-    ip_address
+    (user_id, is_valid)
   }
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS
 // Device tracking for security
+// Enhanced device management
 Table user_devices {
-  id            int [pk, increment]
-  user_id       int [not null, ref: > users.id]
-  device_id     varchar(255) [not null]
-  device_type   varchar(50) [not null]
-  device_name   varchar(100)
-  os            varchar(50)
-  os_version    varchar(20)
-  browser       varchar(50)
-  browser_version varchar(20)
-  is_trusted    boolean [default: false]
-  is_active     boolean [default: true]
-  last_used     timestamp
-  last_ip       varchar(45)
+  id int [pk, increment]
+  user_id int [not null, ref: > users.id]
+  device_id varchar(255) [not null] // Unique device identifier
+  device_name varchar(100) [not null]
+  device_type enum("desktop", "laptop", "tablet", "mobile", "other") [not null]
+  os varchar(50) [not null]
+  os_version varchar(20) [not null]
+  browser varchar(50) [null]
+  browser_version varchar(20) [null]
+  app_version varchar(20) [null] // For mobile apps
+  push_token varchar(255) [null] // For push notifications
+  is_trusted boolean [default: false]
+  trust_score int [default: 0]
+  last_used_at timestamp [not null]
+  last_ip varchar(45) [not null]
   last_location json [null]
-  created_at    timestamp [default: now()]
+  failed_auth_count int [default: 0]
+  metadata json [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
   deactivated_at timestamp [null]
+  deactivation_reason enum("user_initiated", "suspicious_activity", "obsolete", "replaced") [null]
 
   indexes {
     (user_id, device_id) [unique]
-    is_active
-    device_type
+    device_id
+    is_trusted
+    trust_score
+    last_used_at
   }
 }
 
 // TAGS: NOT_INCLUDED_V2 SUGGESTIONS
-// Login statistics
+// Login statistics and security metrics
 Table login_stats {
   id                int [pk, increment]
   user_id           int [not null, ref: > users.id]
@@ -257,11 +496,20 @@ Table login_stats {
   last_success_at   timestamp [null]
   password_resets   int [default: 0]
   suspicious_activities int [default: 0]
+  mfa_enabled_at    timestamp [null] // Track when MFA was enabled
+  last_password_change timestamp [null] // Track password changes
+  consecutive_failures int [default: 0] // Track consecutive failed attempts
+  lockout_until     timestamp [null] // Account lockout timestamp
+  last_ip_address   varchar(45) [null] // Last login IP
+  last_user_agent   varchar(255) [null] // Last browser/device info
   created_at        timestamp [default: now()]
   updated_at        timestamp [default: now()]
 
   indexes {
     user_id
+    last_failed_at
+    consecutive_failures // For lockout checks
+    (user_id, last_success_at) // For activity monitoring
   }
 }
 
@@ -269,14 +517,22 @@ Table login_stats {
 // Platform usage statistics
 Table platform_stats {
   id              int [pk, increment]
-  platform        enum("web", "ios", "android") [not null]
+  platform        enum("web", "ios", "android", "api") [not null] // Added API platform
   total_logins    int [default: 0]
   active_sessions int [default: 0]
   unique_users    int [default: 0]
+  avg_session_duration int [default: 0] // Average session length in seconds
+  peak_concurrent_users int [default: 0] // Track max concurrent users
+  errors_count int [default: 0] // Track error occurrences
+  api_requests int [default: 0] // Track API usage
   date            date [not null]
+  created_at      timestamp [default: now()]
+  updated_at      timestamp [default: now()]
   
   indexes {
     (platform, date) [unique]
+    date // For time-based queries
+    platform // For platform-specific analysis
   }
 }
 
@@ -284,25 +540,39 @@ Table platform_stats {
 // Geographic service availability tracking
 Table service_regions {
   id int [pk, increment]
-  country_code varchar(2) [not null, default: "CA"] // ISO country code
-  province varchar(100) [not null] // Province/state name
-  city varchar(255) [not null] // City name
-  postal_code varchar(10) [not null] // Postal code in A1A 1A1 format
-  region_type enum("urban", "suburban", "rural") [not null] // Type of region
-  population int [null] // Approximate population served
-  service_radius decimal(5,2) [null] // Service coverage radius in km
-  is_active boolean [default: false] // Whether services are currently available
-  activation_date date [null] // When service became available
-  deactivation_date date [null] // When service was suspended/ended
-  service_level enum("full", "limited", "planned") [not null, default: "planned"] // Service availability level
-  hcw_coverage_target int [null] // Target number of healthcare workers needed
+  country_code varchar(2) [not null, default: "CA"]
+  province varchar(100) [not null]
+  city varchar(255) [not null]
+  postal_code varchar(10) [not null]
+  region_type enum("urban", "suburban", "rural") [not null]
+  population int [null]
+  service_radius decimal(5,2) [null]
+  is_active boolean [default: false]
+  activation_date date [null]
+  deactivation_date date [null]
+  service_level enum("full", "limited", "planned", "suspended") [not null, default: "planned"]
+  hcw_coverage_target int [null]
+  hcw_current_count int [default: 0]
+  timezone varchar(50) [not null]
+  coordinates point [null]
+  boundaries polygon [null]
+  demand_score decimal(3,2) [default: 0.00]
+  operating_hours json [null] // Store regular operating hours
+  holiday_schedule json [null] // Store holiday schedules
+  emergency_contact json [null] // Emergency contact info for region
+  metadata json [null] // Additional region-specific data
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
 
   indexes {
     (country_code, province, city, postal_code) [unique]
     service_level
     is_active
+    coordinates
+    demand_score
+    deleted_at
+    (coordinates, service_radius) // For radius searches
   }
 }
 
@@ -312,10 +582,23 @@ Table service_region_demand {
   id int [pk, increment] 
   region_id int [not null, ref: > service_regions.id]
   demand_level enum("low", "medium", "high", "critical") [not null]
-  waitlist_count int [default: 0] // Number of users waiting
-  active_requests int [default: 0] // Number of active service requests
-  last_assessment_date date [not null] // Last demand assessment date
-  next_assessment_date date [not null] // Next scheduled assessment
+  assessment_period enum("daily", "weekly", "monthly") [not null]
+  waitlist_count int [default: 0]
+  active_requests int [default: 0]
+  unfulfilled_requests int [default: 0]
+  hcw_shortage int [default: 0]
+  avg_wait_time int [default: 0]
+  min_wait_time int [default: 0] // Minimum wait time
+  max_wait_time int [default: 0] // Maximum wait time
+  peak_hours json [null]
+  peak_days json [null] // Peak days of week/month
+  capacity_utilization decimal(5,2) [default: 0.00] // Current capacity usage %
+  service_type_demands json [null] // Demand by service type
+  last_assessment_date date [not null]
+  next_assessment_date date [not null]
+  demand_factors json [null]
+  seasonal_pattern json [null]
+  forecast_demand json [null] // Future demand predictions
   notes text [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
@@ -323,7 +606,11 @@ Table service_region_demand {
   indexes {
     region_id
     demand_level
+    assessment_period
     waitlist_count
+    capacity_utilization
+    last_assessment_date
+    (region_id, assessment_period)
   }
 }
 
@@ -333,38 +620,69 @@ Table service_waitlist {
   id int [pk, increment]
   user_id int [not null, ref: > users.id]
   region_id int [not null, ref: > service_regions.id]
-  service_type varchar(100) [not null] // Specific service being requested
-  urgency_level enum("low", "medium", "high") [not null]
+  service_type varchar(100) [not null]
+  urgency_level enum("low", "medium", "high", "critical") [not null]
   request_date timestamp [default: now()]
   preferred_start_date date [null]
-  notification_status enum("pending", "notified", "contacted") [default: "pending"]
+  preferred_time_range json [null]
+  flexibility_score int [default: 0] // How flexible the request timing is
+  special_requirements text [null]
+  required_skills json [null] // Specific HCW skills needed
+  service_duration int [null] // Expected duration in minutes
+  recurring_schedule json [null] // For recurring service requests
+  notification_preferences json [null] // How to notify the user
+  notification_status enum("pending", "notified", "contacted", "follow_up_required") [default: "pending"]
   last_notification_date timestamp [null]
-  status enum("active", "fulfilled", "expired", "cancelled") [default: "active"]
+  next_follow_up_date timestamp [null]
+  status enum("active", "fulfilled", "expired", "cancelled", "on_hold", "in_progress") [default: "active"]
+  cancellation_reason enum(
+    "user_requested",
+    "service_unavailable",
+    "no_hcw_available",
+    "duplicate_request",
+    "requirements_changed",
+    "other"
+  ) [null]
+  matched_hcw_id int [null, ref: > healthcare_workers.id]
+  matching_attempts int [default: 0] // Number of attempted matches
+  estimated_wait_time int [null]
+  priority_score decimal(5,2) [default: 0.00] // Calculated priority
   notes text [null]
+  metadata json [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
+  fulfilled_at timestamp [null]
+  cancelled_at timestamp [null]
 
   indexes {
-    (user_id, region_id, service_type) [unique]
-    status
+    (user_id, region_id, service_type, status)
     urgency_level
+    status
+    matched_hcw_id
+    next_follow_up_date
+    priority_score
+    preferred_start_date
+    (region_id, service_type, status)
+    (matched_hcw_id, status)
   }
 }
 
-// TAGS: INCLUDED_V2 SECURITY
-// Phone number verification system
-Table user_phone_verifications {
-  id                int [pk, increment]
-  user_id           int [not null, ref: > users.id]
-  phone_number      varchar(20) [not null]
-  verification_code varchar(6) [not null] // SMS verification code
-  is_verified       boolean [default: false]
-  expires_at        timestamp [not null] // Code expiration time
-  created_at        timestamp [default: now()]
-  updated_at        timestamp [default: now()]
-  
-  Indexes {
-    (user_id, phone_number) [unique] // One verification process per phone number
+// Waitlist history tracking
+Table service_waitlist_history {
+  id int [pk, increment]
+  waitlist_id int [not null, ref: > service_waitlist.id]
+  status_from enum("active", "fulfilled", "expired", "cancelled", "on_hold", "in_progress") [not null]
+  status_to enum("active", "fulfilled", "expired", "cancelled", "on_hold", "in_progress") [not null]
+  changed_by_user_id int [not null, ref: > users.id]
+  reason text [null]
+  metadata json [null]
+  created_at timestamp [default: now()]
+
+  indexes {
+    waitlist_id
+    (status_from, status_to)
+    changed_by_user_id
+    created_at
   }
 }
 
@@ -380,35 +698,7 @@ Table support_contacts {
   updated_at    timestamp [default: now()]
 
   Indexes {
-    (type, value) [unique] // Prevents duplicate contact methods
-  }
-}
-
-// TAGS: INCLUDED_V2 HISTORICAL_DATA IMPROVEMENT_REQUIRED
-// user address info
-Table user_addresses {
-  id int [pk, increment]
-  user_id int [not null, ref: > users.id]
-  unit_no varchar(50) [null]
-  street_address varchar(255) [not null]
-  city varchar(100) [not null]
-  province varchar(100) [not null]
-  postal_code varchar(20) [not null]
-  country varchar(100) [not null, default: "CA"]
-  is_primary boolean [default: false] // Whether this is the user's primary address
-  address_type enum("home", "work", "billing", "shipping", "other") [not null]
-  latitude decimal(10,8) [null] 
-  longitude decimal(11,8) [null]
-  deleted_at timestamp [null] // Soft delete
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-
-  indexes {
-    user_id
-    postal_code
-    is_primary
-    (city, province, country)
-    deleted_at
+    (type, value) [unique] // Ensures each contact method is unique
   }
 }
 
@@ -423,6 +713,9 @@ Table subscriptions {
   notes text [null] // any additional info
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
+  status enum('active', 'inactive') [default: 'active'] // Subscription status
+  billing_cycle_start date [null] // Start date of the billing cycle
+  billing_cycle_end date [null] // End date of the billing cycle
 }
 
 // TAGS: INCLUDED_V2 HISTORICAL_DATA TO_BE_REVIEWED
@@ -490,9 +783,9 @@ Table patients_addresses {
   unit_no varchar(50) [null]
   street_address varchar(255) [not null]
   city varchar(100) [not null]
-  province varchar(100) [not null]
+  province_state_region varchar(100) [not null] // Changed from 'province' to 'province_state_region' for better clarity and flexibility
   postal_code varchar(20) [not null]
-  country varchar(100) [not null, default: "CA"]
+  country_code varchar(2) [not null, default: "CA"] // Changed from 'country' to 'country_code' and reduced length for ISO 3166-1 alpha-2 codes
   is_primary boolean [default: false]
   address_type enum("home", "work", "other") [not null, default: "home"]
   latitude decimal(10,8) [null] 
@@ -504,7 +797,7 @@ Table patients_addresses {
   indexes {
     patient_id
     postal_code
-    (city, province, country)
+    (city, province_state_region, country_code) // Adjusted index to match the new field name
     is_primary
     address_type
     deleted_at
@@ -520,7 +813,7 @@ Table patients_contacts {
   phone_number varchar(20) [null]
   is_primary boolean [default: false]
   contact_type enum("emergency", "family", "guardian", "other") [not null]
-  relationship varchar(100) [null] // relationship to the user managing the patient
+  relationship_to_patient varchar(100) [null] // renamed for clarity
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
   deleted_at timestamp [null]
@@ -555,6 +848,7 @@ Table patients_medicines {
     care_plan_id
     frequency
     (start_date, end_date)
+    recorded_at // Added index for recorded_at for efficient querying
   }
 }
 
@@ -581,9 +875,6 @@ Table patients_mobility_challenges {
   challenge_id int [not null, ref: > mobility_challenges.id]
   care_plan_id int [not null, ref: > care_plans.id]
   assigned_by int [not null, ref: > users.id]
-  //severity enum("mild", "moderate", "severe") [not null]
-  //recorded_at timestamp [not null]
-  //recorded_by int [ref: >HealthcareWorkers.hcw_id]
   notes text [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
@@ -592,7 +883,6 @@ Table patients_mobility_challenges {
     patient_id
     challenge_id
     care_plan_id
-    //severity
   }
 }
 
@@ -604,9 +894,6 @@ Table patients_perception_communication_issues {
   patient_id int [not null, ref: > patients.id]
   assigned_by int [not null, ref: > users.id]
   care_plan_id int [not null, ref: > care_plans.id]
-  //severity enum("mild", "moderate", "severe") [not null]
-  //recorded_at timestamp [not null]
-  //description text [null]
   notes text [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
@@ -626,10 +913,6 @@ Table patients_nutritional_challenges {
   challenge_id int [not null, ref: > nutritional_challenges.id]
   care_plan_id int [not null, ref: > care_plans.id]
   assigned_by int [not null, ref: > users.id]
-  //severity enum("mild", "moderate", "severe") [not null]
-  //recorded_at timestamp [not null]
-  //dietary_restrictions text [null]
-  //recorded_by int [ref: > HealthcareWorkers.hcw_id]
   notes text [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
@@ -638,7 +921,6 @@ Table patients_nutritional_challenges {
     patient_id
     challenge_id
     care_plan_id
-    //severity
   }
 }
 
@@ -650,9 +932,6 @@ Table patients_moods {
   mood_id int [not null, ref: > moods.id]
   care_plan_id int [not null, ref: > care_plans.id]
   assigned_by int [not null, ref: > users.id]
-  //intensity enum("low", "medium", "high") [not null]
-  //recorded_at timestamp [not null]
-  //recorded_by int [ref: > HealthcareWorkers.hcw_id]  assigned_by int [not null, ref: > users.id]
   notes text [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
@@ -660,8 +939,6 @@ Table patients_moods {
     patient_id
     mood_id
     care_plan_id
-    //intensity
-    //recorded_at
   }
 }
 
@@ -673,11 +950,6 @@ Table patients_health_conditions {
   condition_id int [not null, ref: > health_conditions.id]
   care_plan_id int [not null, ref: > care_plans.id]
   assigned_by int [not null, ref: > users.id]
-  //severity enum("mild", "moderate", "severe") [not null]
-  //onset_date date [null]
-  //recorded_by int [ref: > HealthcareWorkers.hcw_id]
-  //is_chronic boolean [default: false]
-  //recorded_at timestamp [not null]
   notes text [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
@@ -686,8 +958,6 @@ Table patients_health_conditions {
     patient_id
     condition_id
     care_plan_id
-    //severity
-    //onset_date
   }
 }
 
@@ -699,8 +969,6 @@ Table patients_cognition {
   cognition_id int [not null, ref: > cognition_states.id]
   care_plan_id int [not null, ref: > care_plans.id]
   assigned_by int [not null, ref: > users.id]
-  //severity enum("mild", "moderate", "severe") [not null]
-  //recorded_at timestamp [not null]
   notes text [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
@@ -709,8 +977,6 @@ Table patients_cognition {
     patient_id
     cognition_id
     care_plan_id
-    //severity
-    //recorded_at
   }
 }
 
@@ -722,9 +988,6 @@ Table patients_allergies {
   allergy_id int [not null, ref: > allergies.id]
   care_plan_id int [not null, ref: > care_plans.id]
   assigned_by int [not null, ref: > users.id]
-  //severity enum("mild", "moderate", "severe") [not null]
-  //reaction_type text [null]
-  //assigned_at timestamp [not null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
 
@@ -732,7 +995,6 @@ Table patients_allergies {
     patient_id
     allergy_id
     care_plan_id
-    //severity
   }
 }
 
@@ -744,9 +1006,6 @@ Table patients_diagnoses {
   diagnosis_id int [not null, ref: > diagnoses.id]
   care_plan_id int [not null, ref: > care_plans.id]
   assigned_by int [not null, ref: > users.id]
-  //diagnosed_by varchar(255) [not null]
-  //diagnosis_date date [not null]
-  //assigned_at timestamp [not null]
   notes text [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
@@ -755,7 +1014,6 @@ Table patients_diagnoses {
     patient_id
     diagnosis_id
     care_plan_id
-    //diagnosis_date
   }
 }
 
@@ -827,7 +1085,6 @@ Table patients_perception_communication_issues {
   patient_id int [not null, ref: > patients.id]
   assigned_by int [not null, ref: > users.id]
   care_plan_id int [not null, ref: > care_plans.id]
-  //recorded_by int [ref: > HealthcareWorkers.hcw_id]
   description text [null]
   assigned_at timestamp [default: now()]
   updated_at timestamp [default: now()]
@@ -1080,10 +1337,6 @@ Table users_wallets {
     user_id
     status
   }
-  //payment_methods enum('stripe')
-  //paystubs varchar
-  //expenses
-  //invoice_id
 }
 
 // TAGS: INCLUDED_V2
@@ -1126,26 +1379,6 @@ Table invoices_items {
   total_pay decimal(10,2) [not null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
-}
-
-//Table UserPayment {
-//  payment_id int [pk, increment]
-//  invoice_id int [ref: > UserInvoice.invoice_id]
-//  wallet_id int [ref: > UserWallet.wallet_id]
-//  paymentschedule_id int [ref: > PaymentSchedules.paymentschedule_id]
-//  done_at timestamp
-//  payment_date date
-//  payment_method enum('credit', 'debit')
-//}
-
-// TAGS: INCLUDED_V2 DUPLICATED
-// credentials needed for the job
-Table job_credentials {
-    id int [pk, increment]
-    credentials_id int [not null, ref: > credentials.id]
-    job_id int [not null, ref: > jobs.id]
-    assigned_at timestamp [default: now()]
-    updated_at timestamp [default: now()]
 }
 
 // TAGS: INCLUDED_V2
@@ -1278,54 +1511,11 @@ Table job_messages {
   }
 }
 
-// TAGS: INCLUDED_V2
-// Healthcare workers base table
-Table healthcare_workers {
-  id int [pk, increment]
-  first_name varchar(100) [not null]
-  last_name varchar(100) [not null]
-  middle_name varchar(100) [null]
-  business_name varchar(255) [null]
-  legal_name varchar(255) [null]
-  email varchar(255) [unique, not null]
-  apple_email varchar(255) [unique, null]
-  google_email varchar(255) [unique, null]
-  facebook_id varchar(255) [unique, null]
-  hashed_password varchar(255) [not null]
-  date_of_birth date [not null]
-  sin_ssn varchar(20) [unique, not null]
-  gender enum("male", "female", "other") [not null]
-  contact_info varchar(255) [not null]
-  ethnicity_id int [null, ref: > ethnicities.id]
-  status enum("active", "inactive_temporary", "leave_illness", "leave_parental", "leave_other", "terminated") [not null]
-  profile_picture varchar(255) [null]
-  intro_video varchar(255) [null]
-  experience_years int [null]
-  membership_start date [null]
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-  deleted_at timestamp [null]
-  notes text [null]
-
-  indexes {
-    (first_name, last_name)
-    email
-    status
-    experience_years
-    membership_start
-    (status, deleted_at)
-    (experience_years, status)
-    ethnicity_id
-  }
-}
-
 // TAGS: INCLUDED_V2 DUPLICATED
 // Healthcare worker rates
 Table healthcare_worker_rates {
   id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
-  //category_id int [not null, ref: > HealthcareWorkerCategories.id]
-  //subcategory_id int [ref: > HealthcareWorkerSubcategories.id]
   rate decimal(10,2) [not null]
   rate_type enum('hourly', 'daily', 'contract', 'live_in_daily') [not null]
   effective_date date [not null]
@@ -1341,7 +1531,7 @@ Table healthcare_worker_rates {
 
 // TAGS: INCLUDED_V2
 // Healthcare worker expertise
-Table healthcare_worker_expertise {
+Table healthcare_workers_expertise {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   description text [null]
@@ -1351,7 +1541,7 @@ Table healthcare_worker_expertise {
 
 // TAGS: INCLUDED_V2
 // Healthcare worker expertise assignments
-Table healthcare_worker_expertise_info {
+Table healthcare_workers_expertise_info {
   id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
   expertise_id int [not null, ref: > healthcare_worker_expertise.id]
@@ -1365,89 +1555,6 @@ Table healthcare_worker_expertise_info {
   }
 }
 
-// TAGS: INCLUDED_V2
-// Healthcare worker shifts
-Table healthcare_workers_shifts {
-  id int [pk, increment]
-  name varchar(100) [unique, not null]
-  notes text [null]
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-}
-
-// TAGS: INCLUDED_V2 DUPLICATED
-// Healthcare worker shift preferences
-Table healthcare_workers_preferred_shifts {
-  id int [pk, increment]
-  worker_id int [not null, ref: > healthcare_workers.id]
-  shift_id int [not null, ref: > healthcare_workers_shifts.id]
-  assigned_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-
-  indexes {
-    (worker_id, shift_id)
-  }
-}
-
-// TAGS: INCLUDED_V2
-// Healthcare worker schedules
-Table healthcare_workers_schedules {
-  id int [pk, increment]
-  name varchar(100) [unique, not null]
-  description text [null]
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-}
-
-// TAGS: INCLUDED_V2 DUPLICATED
-// Healthcare worker schedule preferences
-Table healthcare_workers_preferred_schedules {
-  id int [pk, increment]
-  worker_id int [not null, ref: > healthcare_workers.id]
-  schedule_id int [not null, ref: > healthcare_workers_schedules.id]
-  hours_range enum('1-8', '8-20', '20-40', '40+') [not null]
-  start_date date [not null]
-  assigned_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-
-  indexes {
-    (worker_id, schedule_id)
-    start_date
-  }
-}
-
-// TAGS: INCLUDED_V2
-// Healthcare worker addresses
-Table healthcare_workers_addresses {
-  id int [pk, increment]
-  worker_id int [not null, ref: > healthcare_workers.id]
-  unit_no varchar(50) [null]
-  street_address varchar(255) [not null]
-  city varchar(100) [not null]
-  province varchar(100) [not null]
-  postal_code varchar(20) [not null]
-  country varchar(100) [not null]
-  is_primary boolean [default: false]
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-
-  indexes {
-    worker_id
-    postal_code
-    (city, province, country)
-  }
-}
-
-// TAGS: INCLUDED_V2 DUPLICATED
-// Healthcare worker categories
-Table healthcare_workers_categories {
-  id int [pk, increment]
-  name varchar(100) [not null, unique]
-  description text [null]
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-}
-
 // TAGS: INCLUDED_V2 DUPLICATED
 // Healthcare worker category assignments
 Table healthcare_workers_category_assignments {
@@ -1459,34 +1566,6 @@ Table healthcare_workers_category_assignments {
 
   indexes {
     (worker_id, category_id)
-  }
-}
-
-// TAGS: INCLUDED_V2
-// Healthcare worker contacts
-Table healthcare_workers_contacts {
-  id int [pk, increment]
-  worker_id int [not null, ref: > healthcare_workers.id]
-  email_address varchar(255) [null]
-  phone_number varchar(20) [null]
-  is_primary boolean [default: false]
-  contact_type enum("personal", "emergency", "business", "reference", "other") [not null]
-  relationship varchar(100) [null] // For emergency contacts: family member, friend, etc.
-  phone_verified boolean [default: false]
-  email_verified boolean [default: false]
-  preferred_contact_method enum("email", "phone", "both") [not null]
-  contact_availability json [null] // Store preferred contact hours/days
-  notes text [null]
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-  deleted_at timestamp [null]
-
-  indexes {
-    worker_id
-    (email_address, phone_number)
-    contact_type
-    is_primary
-    (worker_id, contact_type, is_primary)
   }
 }
 
@@ -1738,22 +1817,6 @@ Table rate_limits {
   }
 }
 
-// TAGS: NOT_INCLUDED_V2 SUGGESTIONS
-// Version control for care plans
-Table care_plan_versions {
-  id           int [pk, increment]
-  care_plan_id int [not null, ref: > care_plans.id]
-  version      int [not null]
-  changes      json [not null]
-  created_by   int [not null, ref: > users.id]
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-
-  indexes {
-    (care_plan_id, version) [unique]
-  }
-}
-
 // TAGS: INCLUDED_V2, DUPLICATED
 // Application documents
 Table application_documents {
@@ -1789,20 +1852,6 @@ Table work_environment_exceptions {
   description text [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
-}
-
-// TAGS: INCLUDED_V2, DUPLICATED
-// Healthcare worker environment preferences
-Table healthcare_workers_preferred_environment_exceptions {
-  id int [pk, increment]
-  worker_id int [not null, ref: > healthcare_workers.id]
-  exception_id int [not null, ref: > work_environment_exceptions.id]
-  assigned_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-
-  indexes {
-    (worker_id, exception_id)
-  }
 }
 
 // TAGS: INCLUDED_V2
@@ -1938,7 +1987,6 @@ Table care_plans {
   id int [pk, increment]
   patient_id int [not null, ref: > patients.id]
   job_id int [not null, ref: > jobs.id]
-  //primary_caregiver_id int [null, ref: > healthcare_workers.id]
   created_by int [not null, ref: > users.id]
   status enum("draft", "active", "completed", "archived") [not null]
   description text [null]
@@ -1979,7 +2027,6 @@ Table care_schedules {
   patient_id int [not null, ref: > patients.id]
   care_plan_id int [not null, ref: > care_plans.id]
   worker_id int [null, ref: > healthcare_workers.id]
-  //user_id INT [not null, ref: > users.user_id]
   total_hours integer [not null]
   start_time timestamp [not null]
   end_time timestamp [not null]
@@ -2008,13 +2055,10 @@ Table jobs {
   user_id int [not null, ref: > users.id]
   patient_id int [not null, ref: > patients.id]
   status enum("draft", "active", "paused", "closed", "reposted") [not null]
-  position varchar(255) [not null]
+  //position varchar(255) [not null]
   currency varchar(10) [not null, default: "CAD"]
   employment_class enum("permanent_pt", "permanent_ft", "temporary_pt", "temporary_ft", "casual") [not null]
   description text [not null]
-  nursing_activity boolean [not null]
-  childcare_activity boolean [not null]
-  supportworker_activity boolean [not null]
   total_budget decimal(10,2) [null]
   hourly_rate decimal(10,2) [null]
   live_in_daily_rate decimal(10,2) [null]
@@ -2043,45 +2087,22 @@ Table jobs {
     user_id
     patient_id
     status
-    position
     employment_class
     job_type
     (start_date, end_date)
   }
 }
 
-// TAGS: INCLUDED_V2
-// Job credentials required
-Table jobs_required_credentials {
+// created during job posting process for position requirements
+Table jobs_healthcare_workers_position {
   id int [pk, increment]
-  job_id int [not null, ref: > jobs.id]
-  credential_id int [not null, ref: > credentials.id]
-  is_mandatory boolean [default: true]
-  assigned_at timestamp [default: now()]
+  user_id int [not null, ref: > users.id]
+  patient_id int [not null, ref: > patients.id]
+  hcw_id int [null, ref: > healthcare_workers.id]
+  category_id int [not null, ref: > healthcare_workers_categories]
+  subcategory_id int [not null, ref: > healthcare_workers_subcategories]
+  created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
-
-  indexes {
-    (job_id, credential_id)
-  }
-}
-
-// TAGS: INCLUDED_V2
-// Job services required
-Table jobs_required_services {
-  id int [pk, increment]
-  job_id int [not null, ref: > jobs.id]
-  service_id int [not null, ref: > services.id]
-  service_routine enum("morning", "lunch", "afternoon", "dinner", "evening") [null]
-  is_scheduled boolean [not null]
-  schedule_days json [null] // Array of days when service is needed
-  notes text [null]
-  assigned_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-
-  indexes {
-    (job_id, service_id)
-    service_routine
-  }
 }
 
 // TAGS: INCLUDED_V2
@@ -2177,7 +2198,7 @@ Table users_preferred_credentials {
     updated_at timestamp [default: now()]
 }
 
-// TAGS: INCLUDED_V2
+// TAGS: INCLUDED_V2 POTENTIALLY_TO_BE_REMOVED
 // info for child care activities
 Table child_care_activities {
     id int [pk, increment]
@@ -2187,18 +2208,18 @@ Table child_care_activities {
     updated_at timestamp [default: now()]
 }
 
-// TAGS: INCLUDED_V2
+// TAGS: INCLUDED_V2 TO_BE_REMOVED
 // jobs involving child care activities and hcw who did the job
-Table jobs_child_care_activities {
-    id int [pk, increment]
-    job_id int [not null, ref: > jobs.id]
-    hcw_id int [not null, ref: > healthcare_workers.id]
-    notes text [null]
-    assigned_at timestamp [default: now()]
-    updated_at timestamp [default: now()]
-}
+//Table jobs_child_care_activities {
+//    id int [pk, increment]
+//    job_id int [not null, ref: > jobs.id]
+//    hcw_id int [not null, ref: > healthcare_workers.id]
+//    notes text [null]
+//    assigned_at timestamp [default: now()]
+//    updated_at timestamp [default: now()]
+//}
 
-// TAGS: INCLUDED_V2
+// TAGS: INCLUDED_V2 POTENTIALLY_TO_BE_REMOVED
 // info for adult care activities
 Table adult_care_activities {
     id int [pk, increment]
@@ -2210,27 +2231,14 @@ Table adult_care_activities {
 
 // TAGS: INCLUDED_V2
 // adult care activities for a specific job
-Table jobs_adult_care_activities {
-    id int [pk, increment]
-    job_id int [not null, ref: > jobs.id]
-    hcw_id int [not null, ref: > healthcare_workers.id]
-    notes text [null]
-    assigned_at timestamp [default: now()]
-    updated_at timestamp [default: now()]
-}
-
-// TAGS: INCLUDED_V2
-// care plan for a specific job, patient
-Table care_plans {
-  id int [pk, increment]
-  patient_id int [not null, ref: > patients.id]
-  job_id int [not null, ref: > jobs.id]
-  description text [null]
-  start_date date [not null]
-  end_date date [not null]
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-}
+//Table jobs_adult_care_activities {
+//    id int [pk, increment]
+//    job_id int [not null, ref: > jobs.id]
+//    hcw_id int [not null, ref: > healthcare_workers.id]
+//    notes text [null]
+//    assigned_at timestamp [default: now()]
+//    updated_at timestamp [default: now()]
+//}
 
 // TAGS: INCLUDED_V2
 // care team assigned for the care plan
@@ -2254,13 +2262,6 @@ Table care_plan_chartting {
   chart_date timestamp [not null]
   vital_signs json [null]
   medications_administered json [null]
-  //daily_care_activities text [null]
-  //symptoms_observed text [null]
-  //meal_intake text [null]
-  //bowel_bladder text [null]
-  //wound_care text [null]
-  //mood_behavior text [null]
-  //emergency_situations text [null]
   additional_notes text [null]
   attachments json [null]
   signature varchar(255) [not null]
@@ -2313,7 +2314,7 @@ Table healthcare_workers {
   sin_ssn varchar(20) [unique, not null]
   gender enum("Male", "Female", "Other") [not null]
   contact_info varchar(255) [not null]
-  ethnicity int [null, ref: > Ethnicities.id]
+  ethnicity int [null, ref: > ethnicities.id]
   status enum("Active", "Inactive (Temporary)", "Leave - Illness/Injury", "Leave - Maternity/Parental", "Leave - Other", "Terminated/Quit") [not null]
   profile_picture varchar(255) [null]
   intro_video varchar(255) [null]
@@ -2328,32 +2329,9 @@ Table healthcare_workers {
 Table rates {
   id int [pk, increment]
   hcw_id int [not null, ref: > healthcare_workers.id]
-  //category_id int [not null, ref: > HealthcareWorkerCategories.id]
-  //subcategory_id int [ref: > HealthcareWorkerSubcategories.id]
   rate decimal(10,2) [not null]
   rate_type enum('hourly', 'daily', 'contract', 'live-in flat daily') [not null]
   effective_date date [not null]
-  assigned_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-}
-
-// TAGS: INCLUDED_V2
-// healthcare worker expertise terms
-Table healthcare_workers_expertises {
-  id int [pk, increment]
-  name varchar(100) [unique, not null]
-  description text [null]
-  created_at timestamp [default: now()]
-  updated_at timestamp [default: now()]
-}
-
-// TAGS: INCLUDED_V2
-// Healthcare worker expertise info
-Table healthcare_workers_expertises_info {
-  id int [pk, increment]
-  hcw_id int [not null, ref: > healthcare_workers.id]
-  expertise_id int [not null, ref: > healthcare_workers_expertises.id]
-  notes text [null]
   assigned_at timestamp [default: now()]
   updated_at timestamp [default: now()]
 }
@@ -2456,7 +2434,7 @@ Table healthcare_workers_subcategories {
     updated_at timestamp [default: now()]
 }
 
-// TAGS: TO_BE_REVIEWED
+// TAGS: TO_BE_REVIEWED POTENTIAL_OVERLAP
 // positions vocab for HCWs
 Table healthcare_workers_positions {
     id int [pk, increment]
@@ -2706,10 +2684,82 @@ Table healthcare_worker_password_resets {
   }
 }
 
+// entry created when user creates the care plans
+// diagnosis info related to the care plans
+Table care_plans_diagnoses {
+  id int [pk, increment]
+  careplan_id int [not null, ref: > care_plans.id]
+  diagnosis_id int [not null, ref: > diagnoses.id]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+}
+
+// entry created when user creates the care plans
+Table care_plans_allergies {
+  id int [pk, increment]
+  careplan_id int [not null, ref: > care_plans.id]
+  allergy_id int [not null, ref: > allergies.id]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+}
+
+// entry created when user creates the care plans
+Table care_plans_cognition_states {
+  id int [pk, increment]
+  careplan_id int [not null, ref: > care_plans.id]
+  cognition_id int [not null, ref: > cognition_states.id]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+}
+
+// entry created when user creates the care plans
+Table care_plans_moods {
+  id int [pk, increment]
+  careplan_id int [not null, ref: > care_plans.id]
+  mood_id int [not null, ref: > mood.id]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+}
+
+// entry created when user creates the care plans
+Table care_plans_health_conditions {
+  id int [pk, increment]
+  careplan_id int [not null, ref: > care_plans.id]
+  condition_id int [not null, ref: > health_conditions.id]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+}
+
+// entry created when user creates the care plans
+Table care_plans_nutritional_challenges {
+  id int [pk, increment]
+  careplan_id int [not null, ref: > care_plans.id]
+  challenge_id int [not null, ref: > nutritional_challenges.id]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+}
+
+// entry created when user creates the care plans
+Table care_plans_perception_communication_issues {
+  id int [pk, increment]
+  careplan_id int [not null, ref: > care_plans.id]
+  issue_id int [not null, ref: > perception_communication_issues.id]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+}
+
+// entry created when user creates the care plans
+Table care_plans_mobility_challenges {
+  id int [pk, increment]
+  careplan_id int [not null, ref: > care_plans.id]
+  challenge_id int [not null, ref: > mobility_challenges.id]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+}
 
 // SUGGESTION: tracking sharing of careplans
 // which hcw have access to a careplan
-Table care_plan_shares {
+Table care_plans_shares {
   id int [pk, increment]
   careplan_id int [not null, ref: > care_plans.id]
   hcw_id int [not null, ref: > healthcare_workers.id]
@@ -2782,7 +2832,6 @@ Table user_patient_management_history {
   previous_state json [null]
   new_state json [null]
   notes text [null]
-  //performed_by int [not null, ref: > users.id]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
 
@@ -2790,7 +2839,6 @@ Table user_patient_management_history {
     user_id
     patient_id
     action
-    //performed_by
     created_at
   }
 }
