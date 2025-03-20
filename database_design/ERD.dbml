@@ -1,3 +1,48 @@
+// overlaps between some patients_ and care_plans_ tables are already noted and will be resolved later
+// mostlikely retaining both tables for new cases and old ones
+
+// FLOWS
+// a user created with the user Table, user chooses care seeker a patient created using patients, patients_addresses,
+// patients_allergies, patients_medicines, patients diagnoses, patients_moods, patients_nutritional_challenges, 
+// patients_cognition, patients_health_conditions, patients_perception_communication_issues, patients_mobility_challenges,
+// patients_personal_interests, patients_property_types, patients_care_settings, table, care_plans, care_schedules,
+// jobs, jobs_healthcare_workers_position, jobs_environment_exceptions, jobs_required_languages,
+// care_plan_care_team, jobs_credentials, jobs_services, jobs_personal_interests, care_plans_diagnoses, care_plans_allergies,
+// care_plans_cognition_states, care_plans_moods, care_plans_health_conditions, care_plans_nutritional_challenges,
+// care_plans_perception_communication_issues, care_plans_mobility_challenges,
+// 
+
+// next steps store data in payment_schedules, user_wallets, users_invoices, invoices_items, expenses, users_transactions,
+// payment_methods, pay_stubs_generated, job_messages, 
+
+// health care workers upon account creation info filled in the healthcare_workers, healthcare_workers_personal_interests, 
+// health_care_workers_preferred_care_settings, healthcare_workers_preferred_job_types, healthcare_workers_rates,
+// healthcare_workers_expertise_info, healthcare_workers_category_assignments, healthcare_workers_credentials, 
+// healthcare_workers_services, healthcare_workers_jobs, healthcare_workers_job_applications, 
+// job_application_documents, healthcare_workers_skills, healthcare_workers_wallets, healthcare_workers_performance_metrics,
+// healthcare_workers_performance_records, healthcare_workers_activity_logs, healthcare_workers_availability,
+// healthcare_workers_notifications, care_plan_team_members, care_plan_chartting, rates,
+// healthcare_workers_preferred_shifts, healthcare_workers_preferred_schedules, healthcare_workers_addresses,
+// healthcare_workers_categories_info, healthcare_workers_subcategories_info, healthcare_workers_positions_info,
+// healthcare_workers_contacts, healthcare_workers_notes, job_application_documents, healthcare_workers_preferred_environment_exceptions,
+// healthcare_workers_emails, healthcare_worker_auth, healthcare_worker_phone_verifications, healthcare_workers_jobs,
+// healthcare_workers_activity, 
+
+// terms included for the tables are medicines, personal_interests, mobility_challenges, perception_communication_issues,
+// nutritional_challenges, moods, health_conditions, allergies, diagnoses, property_types, care_settings, job_types,
+// healthcare_workers_expertise, ethnicities, tags, services, skills, credentials, work_environment_exceptions,
+// child_care_activities, adult_care_activities, care_plan_care_team, healthcare_workers_shifts, healthcare_workers_schedules,
+// healthcare_workers_categories, healthcare_workers_subcategories, healthcare_workers_positions, 
+
+// historical data gathered for analysis are within user_managed_mobility_challenges, user_managed_perception_communication_issues,
+// user_managed_nutritional_challenges, user_managed_moods, user_managed_health_conditions, user_managed_property_types,
+// user_managed_care_settings, user_patient_management_history, user_managed_patients, user_patient_management_stats,
+// 
+
+// FLOWS SUGGESTION
+// asking for info about date of birth, patients contacts, emails for patients_addresses, patients_communication_preferences
+//  table
+
 // TAGS allows to track each table info for further improvements and against the original design
 
 
@@ -703,48 +748,180 @@ Table support_contacts {
 }
 
 // TAGS: INCLUDED_V2 TO_BE_REVIEWED
-// subscriptions info
-Table subscriptions {
+// Subscription plans
+Table subscription_plans {
   id int [pk, increment]
   name varchar(100) [unique, not null]
   description text [null]
   price decimal(10, 2) [not null]
-  duration enum('monthly', 'yearly') [not null]
-  notes text [null] // any additional info
+  currency varchar(3) [not null, default: "CAD"]
+  billing_interval enum("monthly", "yearly") [not null]
+  trial_days int [null]
+  features json [not null] // Features included in plan
+  max_users int [null] // Maximum users allowed
+  max_patients int [null] // Maximum patients allowed
+  is_featured boolean [default: false]
+  sort_order int [default: 0]
+  status enum("active", "inactive", "deprecated") [not null, default: "active"]
+  metadata json [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
-  status enum('active', 'inactive') [default: 'active'] // Subscription status
-  billing_cycle_start date [null] // Start date of the billing cycle
-  billing_cycle_end date [null] // End date of the billing cycle
-}
-
-// TAGS: INCLUDED_V2 HISTORICAL_DATA TO_BE_REVIEWED
-// user subscriptions historical info
-Table user_subscriptions {
-  id int [pk, increment]
-  user_id int [not null, ref: > users.id]
-  subscription_id int [not null, ref: > subscriptions.id]
-  start_date date [not null]
-  end_date date [not null]
-  status enum('active', 'inactive', 'cancelled', 'pending', 'suspended') [not null]
-  auto_renew boolean [default: true]
-  payment_status enum('paid', 'pending', 'failed', 'refunded') [not null]
-  cancellation_reason text [null]
-  trial_end_date date [null]
-  next_billing_date date [null]
-  assigned_at timestamp [default: now()]
-  cancelled_at timestamp [null]
-  updated_at timestamp [default: now()]
-  deleted_at timestamp [null] // For soft deletes
+  deleted_at timestamp [null]
 
   indexes {
-    (user_id, subscription_id)
+    name
     status
-    payment_status
-    start_date
-    end_date
+    billing_interval
+    is_featured
+    sort_order
+  }
+}
+
+// TAGS: INCLUDED_V2 TO_BE_REVIEWED
+// Subscription pricing tiers
+Table subscription_price_tiers {
+  id int [pk, increment]
+  plan_id int [not null, ref: > subscription_plans.id]
+  quantity_from int [not null] // Starting quantity for tier
+  quantity_to int [null] // Ending quantity for tier (null = unlimited)
+  unit_price decimal(10, 2) [not null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+
+  indexes {
+    plan_id
+    (plan_id, quantity_from, quantity_to)
+  }
+}
+
+// TAGS: INCLUDED_V2 TO_BE_REVIEWED
+// Active subscriptions
+Table subscriptions {
+  id int [pk, increment]
+  user_id int [not null, ref: > users.id]
+  plan_id int [not null, ref: > subscription_plans.id]
+  status enum(
+    "trialing",
+    "active",
+    "past_due",
+    "canceled",
+    "unpaid",
+    "paused"
+  ) [not null]
+  quantity int [not null, default: 1]
+  trial_start timestamp [null]
+  trial_end timestamp [null]
+  current_period_start timestamp [not null]
+  current_period_end timestamp [not null]
+  cancel_at timestamp [null]
+  canceled_at timestamp [null]
+  cancellation_reason enum(
+    "user_requested",
+    "payment_failed",
+    "fraudulent",
+    "business_closed",
+    "switched_plan",
+    "other"
+  ) [null]
+  cancellation_details text [null]
+  pause_collection bool [default: false]
+  billing_cycle_anchor timestamp [not null]
+  next_billing_date timestamp [null]
+  billing_thresholds json [null]
+  payment_method_id int [null, ref: > payment_methods.id]
+  latest_invoice_id int [null, ref: > invoices.id]
+  metadata json [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
+
+  indexes {
+    user_id
+    plan_id
+    status
+    current_period_end
     next_billing_date
-    deleted_at
+    (user_id, plan_id)
+  }
+}
+
+// TAGS: INCLUDED_V2 TO_BE_REVIEWED
+// Subscription items (for multiple quantities or add-ons)
+Table subscription_items {
+  id int [pk, increment]
+  subscription_id int [not null, ref: > subscriptions.id]
+  plan_id int [not null, ref: > subscription_plans.id]
+  quantity int [not null, default: 1]
+  unit_price decimal(10, 2) [not null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+
+  indexes {
+    subscription_id
+    plan_id
+  }
+}
+
+// TAGS: INCLUDED_V2 TO_BE_REVIEWED
+// Subscription usage tracking
+Table subscription_usage {
+  id int [pk, increment]
+  subscription_id int [not null, ref: > subscriptions.id]
+  feature_name varchar(100) [not null]
+  quantity_used int [not null, default: 0]
+  period_start timestamp [not null]
+  period_end timestamp [not null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+
+  indexes {
+    subscription_id
+    feature_name
+    (subscription_id, feature_name, period_start, period_end)
+  }
+}
+
+// TAGS: INCLUDED_V2 TO_BE_REVIEWED
+// Subscription events for audit trail
+Table subscription_events {
+  id int [pk, increment]
+  subscription_id int [not null, ref: > subscriptions.id]
+  event_type enum(
+    "created",
+    "updated",
+    "canceled",
+    "renewed",
+    "trial_started",
+    "trial_ended",
+    "payment_succeeded",
+    "payment_failed",
+    "plan_changed",
+    "quantity_updated"
+  ) [not null]
+  previous_status enum(
+    "trialing",
+    "active",
+    "past_due",
+    "canceled",
+    "unpaid",
+    "paused"
+  ) [null]
+  new_status enum(
+    "trialing",
+    "active",
+    "past_due",
+    "canceled",
+    "unpaid",
+    "paused"
+  ) [null]
+  metadata json [null]
+  created_at timestamp [default: now()]
+
+  indexes {
+    subscription_id
+    event_type
+    created_at
+    (subscription_id, created_at)
   }
 }
 
@@ -761,8 +938,8 @@ Table patients {
   date_of_birth date [not null]
   gender enum("male", "female", "other") [not null]
   profile_picture varchar(255) [null]
-  hashed_password varchar(255) [null]
   notes text [null]
+  metadata json [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
   deleted_at timestamp [null]
@@ -783,13 +960,18 @@ Table patients_addresses {
   unit_no varchar(50) [null]
   street_address varchar(255) [not null]
   city varchar(100) [not null]
-  province_state_region varchar(100) [not null] // Changed from 'province' to 'province_state_region' for better clarity and flexibility
+  province_state_region varchar(100) [not null]
   postal_code varchar(20) [not null]
-  country_code varchar(2) [not null, default: "CA"] // Changed from 'country' to 'country_code' and reduced length for ISO 3166-1 alpha-2 codes
+  country_code varchar(2) [not null, default: "CA"]
   is_primary boolean [default: false]
-  address_type enum("home", "work", "other") [not null, default: "home"]
-  latitude decimal(10,8) [null] 
+  accessibility_notes text [null]
+  special_instructions text [null]
+  latitude decimal(10,8) [null]
   longitude decimal(11,8) [null]
+  valid_from date [null]
+  valid_until date [null]
+  verification_status enum("unverified", "verified", "failed") [default: "unverified"]
+  metadata json [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
   deleted_at timestamp [null]
@@ -797,23 +979,36 @@ Table patients_addresses {
   indexes {
     patient_id
     postal_code
-    (city, province_state_region, country_code) // Adjusted index to match the new field name
+    (city, province_state_region, country_code)
     is_primary
     address_type
+    (latitude, longitude)
+    verification_status
     deleted_at
   }
 }
 
 // TAGS: INCLUDED_V2 HISTORICAL_DATA
-// Patient contacts
+// Enhanced patient contacts
 Table patients_contacts {
   id int [pk, increment]
   patient_id int [not null, ref: > patients.id]
+  first_name varchar(100) [not null]
+  last_name varchar(100) [not null]
   email_address varchar(255) [null]
   phone_number varchar(20) [null]
+  alternate_phone varchar(20) [null]
   is_primary boolean [default: false]
-  contact_type enum("emergency", "family", "guardian", "other") [not null]
-  relationship_to_patient varchar(100) [null] // renamed for clarity
+  contact_type enum("emergency", "family", "guardian", "physician", "specialist", "pharmacy", "other") [not null]
+  relationship_to_patient varchar(100) [null]
+  contact_priority int [default: 0]
+  preferred_contact_method enum("email", "phone", "sms") [not null, default: "phone"]
+  preferred_contact_time enum("morning", "afternoon", "evening", "anytime") [default: "anytime"]
+  authorized_to_discuss_health boolean [default: false]
+  has_medical_power_of_attorney boolean [default: false]
+  availability json [null]
+  notes text [null]
+  metadata json [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
   deleted_at timestamp [null]
@@ -821,38 +1016,161 @@ Table patients_contacts {
   indexes {
     patient_id
     contact_type
+    contact_priority
     (email_address, phone_number)
+    (patient_id, contact_type, is_primary)
   }
 }
 
-// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
-// Patient medications for the care plan
-Table patients_medicines {
+// TAGS NOT_INCLUDED_V2 SUGGESTIONS
+// Patient communication preferences
+Table patients_communication_preferences {
+  id int [pk, increment]
+  patient_id int [not null, ref: > patients.id]
+  appointment_reminders boolean [default: true]
+  reminder_method enum("email", "sms", "phone", "all") [default: "all"]
+  reminder_timing int [default: 24] // Hours before appointment
+  receive_marketing boolean [default: false]
+  receive_newsletters boolean [default: false]
+  preferred_contact_time json [null]
+  do_not_contact boolean [default: false]
+  special_instructions text [null]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+
+  indexes {
+    patient_id [unique]
+    reminder_method
+  }
+}
+
+// TAGS: NOT_INCLUDED_V2 TO_BE_REVIEWED
+// Patient medications
+Table patient_medications {
   id int [pk, increment]
   patient_id int [not null, ref: > patients.id]
   medicine_id int [not null, ref: > medicines.id]
   care_plan_id int [not null, ref: > care_plans.id]
-  assigned_by int [not null, ref: > users.id]
-  recorded_at timestamp [not null]
-  dosage varchar(100) [not null]
-  frequency enum("daily", "weekly", "monthly", "as_needed") [not null]
+  prescribed_by int [not null, ref: > healthcare_providers.id]
+  prescribed_at timestamp [not null]
+  dispensed_by int [null, ref: > pharmacies.id]
+  dispensed_at timestamp [null]
+  status enum(
+    "active",
+    "discontinued",
+    "completed",
+    "on_hold",
+    "cancelled"
+  ) [not null, default: "active"]
+  dosage_amount decimal(10,2) [not null]
+  dosage_unit varchar(20) [not null]
+  route_of_administration enum(
+    "oral",
+    "topical",
+    "injection",
+    "inhalation",
+    "other"
+  ) [not null]
+  frequency_type enum(
+    "daily",
+    "weekly",
+    "monthly",
+    "as_needed",
+    "custom"
+  ) [not null]
+  frequency_times int [not null] // Times per frequency period
+  frequency_period varchar(50) [null] // Custom frequency description
+  timing json [not null] // Specific timing details
   start_date date [not null]
   end_date date [null]
-  notes text [null]
+  duration int [null] // Duration in days
+  refills_authorized int [default: 0]
+  refills_remaining int [default: 0]
+  quantity_prescribed int [not null]
+  quantity_dispensed int [default: 0]
+  instructions text [not null]
+  patient_directions text [not null] // Simple instructions for patient
+  special_instructions text [null]
+  reason_for_medication text [null]
+  discontinuation_reason text [null]
+  requires_monitoring boolean [default: false]
+  monitoring_parameters json [null]
+  last_monitored_at timestamp [null]
+  side_effects_observed text [null]
+  effectiveness_rating int [null] // 1-5 rating
+  compliance_rate decimal(5,2) [null] // Percentage
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
 
   indexes {
     patient_id
     medicine_id
     care_plan_id
-    frequency
+    prescribed_by
+    dispensed_by
+    status
+    frequency_type
     (start_date, end_date)
-    recorded_at // Added index for recorded_at for efficient querying
+    requires_monitoring
   }
 }
 
-// TAGS: NOT_INCLUDED_V2 SUGGESTIONS HISTORICAL_DATA
+// TAGS: NOT_INCLUDED_V2 TO_BE_REVIEWED
+// Medication schedule
+Table medication_schedules {
+  id int [pk, increment]
+  medication_id int [not null, ref: > patient_medications.id]
+  scheduled_time time [not null]
+  days_of_week int [null] // Bitmap for days (1-7)
+  specific_dates json [null] // For irregular schedules
+  reminder_enabled boolean [default: true]
+  reminder_before_minutes int [default: 30]
+  created_at timestamp [default: now()]
+  updated_at timestamp [default: now()]
+
+  indexes {
+    medication_id
+    scheduled_time
+    days_of_week
+  }
+}
+
+// TAGS: NOT_INCLUDED_V2 TO_BE_REVIEWED
+// Medication administration records
+Table medication_administrations {
+  id int [pk, increment]
+  medication_id int [not null, ref: > patient_medications.id]
+  administered_by int [not null, ref: > users.id]
+  scheduled_time timestamp [not null]
+  administered_time timestamp [not null]
+  status enum(
+    "given",
+    "missed",
+    "refused",
+    "held",
+    "error"
+  ) [not null]
+  dose_given decimal(10,2) [not null]
+  route_given varchar(50) [not null]
+  effectiveness_noted text [null]
+  side_effects_noted text [null]
+  notes text [null]
+  witness_required boolean [default: false]
+  witnessed_by int [null, ref: > users.id]
+  created_at timestamp [default: now()]
+
+  indexes {
+    medication_id
+    administered_by
+    scheduled_time
+    administered_time
+    status
+    (medication_id, scheduled_time)
+  }
+}
+
+// TAGS: INCLUDED_V2
 // Patient personal interests
 Table patients_personal_interests {
   id int [pk, increment]
@@ -1018,13 +1336,36 @@ Table patients_diagnoses {
 }
 
 // TAGS: INCLUDED_V2
-// terms used for medicine
+// Medicine catalog
 Table medicines {
   id int [pk, increment]
-  name varchar(100) [unique, not null]
-  description text [null]
+  name varchar(255) [not null]
+  generic_name varchar(255) [null]
+  drug_class varchar(100) [not null]
+  controlled_substance boolean [default: false]
+  requires_prescription boolean [default: true]
+  standard_dosage json [null] // Standard dosing guidelines
+  form enum("tablet", "capsule", "liquid", "injection", "patch", "cream", "other") [not null]
+  strength varchar(50) [not null] // e.g., "500mg", "10mg/ml"
+  manufacturer varchar(100) [null]
+  ndc_code varchar(50) [null] // National Drug Code
+  din_code varchar(50) [null] // Drug Identification Number (Canada)
+  warnings text [null]
+  side_effects text [null]
+  interactions text [null]
+  storage_instructions text [null]
+  metadata json [null]
   created_at timestamp [default: now()]
   updated_at timestamp [default: now()]
+  deleted_at timestamp [null]
+
+  indexes {
+    name
+    generic_name
+    drug_class
+    (ndc_code, din_code)
+    controlled_substance
+  }
 }
 
 // TAGS: INCLUDED_V2
@@ -1280,7 +1621,7 @@ Table job_types {
 
 // TAGS: INCLUDED_V2
 // job types preferrence for HCWs
-Table healthcare_workers_preferred_jobs {
+Table healthcare_workers_preferred_job_types {
   id int [pk, increment]
   hcw_id int [not null, ref: > healthcare_workers.id]
   job_type_id int [not null, ref: > job_types.id]
@@ -1513,7 +1854,7 @@ Table job_messages {
 
 // TAGS: INCLUDED_V2 DUPLICATED
 // Healthcare worker rates
-Table healthcare_worker_rates {
+Table healthcare_workers_rates {
   id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
   rate decimal(10,2) [not null]
@@ -1607,7 +1948,7 @@ Table healthcare_workers_services {
 }
 
 // TAGS: INCLUDED_V2
-// Healthcare worker jobs
+// Healthcare workers jobs history info
 Table healthcare_workers_jobs {
   id int [pk, increment]
   job_id int [not null, ref: > jobs.id]
@@ -1819,8 +2160,9 @@ Table rate_limits {
 
 // TAGS: INCLUDED_V2, DUPLICATED
 // Application documents
-Table application_documents {
+Table job_application_documents {
   id int [pk, increment]
+  job_id int [not null, ref: > jobs.id]
   application_id int [not null, ref: > healthcare_workers_job_applications.id]
   document_type enum("resume", "certification", "reference", "other") [not null]
   file_url varchar(255) [not null]
@@ -2523,7 +2865,7 @@ Table healthcare_workers_preferred_environment_exceptions {
 
 // TAGS: INCLUDED_V2
 // Healthcare worker secondary emails
-Table healthcare_worker_emails {
+Table healthcare_workers_emails {
   id int [pk, increment]
   worker_id int [not null, ref: > healthcare_workers.id]
   email varchar(255) [unique, not null]
